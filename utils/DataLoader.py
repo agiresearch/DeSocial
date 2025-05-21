@@ -67,7 +67,7 @@ def get_link_prediction_data(dataset_name: str, args = None, train_time = 0, val
     :return: node_raw_features, full_data, train_data, val_data, test_data
     """
     # Load data and train val test split
-    graph_df = pd.read_csv('./data/{}/edge_list_new.csv'.format(dataset_name))
+    graph_df = pd.read_csv('./data/{}/edge_list.csv'.format(dataset_name))
     
     # random node features
     node_raw_features = np.load(f'./data/{dataset_name}/node_feat.npy')

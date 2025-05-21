@@ -79,6 +79,7 @@ class Blockchain:
     def publish_contract(self, contract_json_path):
         # Get the ABI (Application Binary Interface) of the smart contract. python and solidity connect through the ABI.
         # Compiling smart contracts into abi json files requires truffle (a smart contract compilation environment)
+        _ = self.web3.eth.default_account = self.web3.eth.accounts[0]
         with open(contract_json_path, "r") as f:
             contract_json = json.load(f)
             abi = contract_json["abi"]

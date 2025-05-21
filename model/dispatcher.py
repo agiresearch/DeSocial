@@ -2,19 +2,20 @@ from model.models import *
 
 class Dispatcher(object):
     
-    def __init__():
+    def __init__(self):
         pass
 
-    def dispatch(self, args):
-        if args.model_name == "GCN":
+    def dispatch(self, node_model_type, args):
+
+        if node_model_type == "GCN":
             model = GCN(in_channels=args.in_dim, hidden_channels=args.hidden_dim, out_channels=args.out_dim)
-        elif args.model_name == "GAT":
+        elif node_model_type == "GAT":
             model = GAT(in_channels=args.in_dim, hidden_channels=args.hidden_dim, out_channels=args.out_dim)
-        elif args.model_name == "SAGE":
+        elif node_model_type == "SAGE":
             model = SAGE(in_channels=args.in_dim, hidden_channels=args.hidden_dim, out_channels=args.out_dim)
-        elif args.model_name == "MLP":
+        elif node_model_type == "MLP":
             model = MLP(in_channels=args.in_dim, hidden_channels=args.hidden_dim, out_channels=args.out_dim)
-        elif args.model_name == "SGC":
+        elif node_model_type == "SGC":
             model = SGC(in_channels=args.in_dim, out_channels=args.out_dim, K=2)
         
         return model

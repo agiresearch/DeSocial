@@ -39,7 +39,7 @@ Here gives the framework of DeSocial (both modules enabled).
     
 **Step 9:** Validators in $\Phi$ run $p_i$'s persoanlized algorithm on $p_i$'s request and submit their binary votes to the blockchain. The blockchain aggregates the votes to form the final prediction. Both the voting and aggregating operations are defined by the smart contract.
 
-**Step 10:** The period ends, all the nodes in the network updates their local social network data $\mathcal{D}^t$ via requesting the blockchain for the latest links by the smart contract.
+**Step 10:** The period ends, all the nodes in the network copy the social network data  $\mathcal{G}^{t+1}$ and merge it to their local memory via the blockchain for the latest links by the smart contract.
 
 For the details of these notations, please refer the problem definitions in our paper.
 
@@ -59,7 +59,7 @@ python run.py
 
 To quickly reproduce the result of DeSocial in the best configuration, please use
 ```bash
-python run.py --cuda $CUDA --dataset_name $DATASET --f_pool $F --experts $EXPERTS --metric $METRIC --load_best_configs
+python run.py --cuda $CUDA --dataset_name $DATASET --f_pool $F --experts $EXPERTS --metric $METRIC --start_period 28 --load_best_configs
 ```
 
 The range of some important arguments are specified below:
@@ -69,23 +69,27 @@ $DATASET in [UCI, Memo-Tx, Enron, GDELT]
 $METRIC in [Acc@2, Acc@3, Acc@5]
 ```
 
-For example, if you want to reproduce DeSocial-X (with validator community size of 5), X is one of the backbones, let's say SGC on UCI, please use
+For example, if you want to quickly reproduce DeSocial-X (with validator community size of 5), X is one of the backbones, let's say SGC on UCI, please use
 ```bash
-python run.py --cuda 0 --dataset_name UCI --f_pool SGC --experts 5 --load_best_configs
+python run.py --cuda 0 --dataset_name UCI --f_pool SGC --experts 5 --start_period 28 --metric Acc@2 --load_best_configs
 ```
 
 If you want to reproduce DeSocial-PA on UCI, please use
 ```bash
-python run.py --cuda 0 --dataset_name UCI --f_pool PA --load_best_configs
+python run.py --cuda 0 --dataset_name UCI --f_pool PA --start_period 28 --metric Acc@2 --load_best_configs
 ```
 
 If you want to reproduce DeSocial-Full on UCI, please use
 ```bash
-python run.py --cuda 0 --dataset_name UCI --f_pool PA --experts 5 --load_best_configs
+python run.py --cuda 0 --dataset_name UCI --f_pool PA --experts 5 --start_period 28 --metric Acc@2 --load_best_configs
 ```
 
 If you want to reproduce DeSocial on UCI at a given backbone selection pool {GraphSAGE, SGC}, please use
 ```bash
-python run.py --cuda 0 --dataset_name UCI --f_pool SAGE+SGC --experts 5 --load_best_configs
+python run.py --cuda 0 --dataset_name UCI --f_pool SAGE+SGC --experts 5 --start_period 28 --metric Acc@2 --load_best_configs
 ```
 use "+" to combine the backbone names.
+
+Different from centralized algorithms, in each period the blockchain selects different validators. As there are tens of thousands of nodes, it's likely to train every validator given random ML parameters. Therefore, we can reproduce the result from the first testing period. As t+2=30 (the first testing period), the start period is set to 28.
+
+We reported the run time based on observing one evaluation metric because the overload of voting and aggregation is high in serial, not parallel.

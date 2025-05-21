@@ -10,36 +10,6 @@ def get_rank(target_score, candidate_score):
     rank = len(tmp_list[tmp_list <= 0]) + 1
     return rank
 
-def get_link_prediction_metrics_train(predicts: torch.Tensor, labels: torch.Tensor):
-    """
-    Get metrics for the link prediction task.
-    :param predicts: Tensor, shape (num_samples, )
-    :param labels: Tensor, shape (num_samples, )
-    :return:
-        dictionary of metrics {'average_precision': ..., 'roc_auc': ..., 'accuracy': ...}
-    """
-    predicts_np = predicts.cpu().detach().numpy()
-    labels_np = labels.cpu().numpy()
-    
-    average_precision = average_precision_score(y_true=labels_np, y_score=predicts_np)
-    roc_auc = roc_auc_score(y_true=labels_np, y_score=predicts_np)
-    
-    # Binarize predictions with threshold 0.5
-    #binary_preds = (predicts_np > 0.5).astype(int)
-    N = predicts.shape[0] // 2
-    pos_scores = predicts_np[:N]
-    neg_scores = predicts_np[N:]
-    binary_preds = np.array(pos_scores > neg_scores, dtype=int)
-    accuracy = np.mean(binary_preds)
-
-    return {
-        'average_precision': average_precision,
-        'roc_auc': roc_auc,
-        'accuracy': accuracy,
-        'weight': predicts.shape[0]
-    }, (binary_preds).astype(int)
-
-
 def get_link_prediction_metrics(predicts: torch.Tensor, labels: torch.Tensor, neg_size: int = 4):
     """
     Get metrics for the link prediction task.
@@ -59,27 +29,27 @@ def get_link_prediction_metrics(predicts: torch.Tensor, labels: torch.Tensor, ne
 
     pos_scores = torch.tensor(predicts_np[:N]).to(predicts.device)
     neg_scores = torch.tensor(predicts_np[N:N*2]).to(predicts.device).reshape(1, N)
-    hit1, hit1_metrics = get_retrival_metrics(pos_scores, neg_scores)
-    hit1_metrics = {'accuracy': hit1_metrics}
+    acc_2, acc_2_metrics = get_retrival_metrics(pos_scores, neg_scores)
+    acc_2_metrics = {'Acc@2': acc_2_metrics}
 
     pos_scores = torch.tensor(predicts_np[:N]).to(predicts.device)
     neg_scores = torch.tensor(predicts_np[N:N*3]).to(predicts.device).reshape(2, N)
-    hit2, hit2_metrics = get_retrival_metrics(pos_scores, neg_scores)
-    hit2_metrics = {'H2': hit2_metrics}
+    acc_3, acc_3_metrics = get_retrival_metrics(pos_scores, neg_scores)
+    acc_3_metrics = {'Acc@3': acc_3_metrics}
 
     pos_scores = torch.tensor(predicts_np[:N]).to(predicts.device)
     neg_scores = torch.tensor(predicts_np[N:]).to(predicts.device).reshape(4, N)
-    hit3, hit3_metrics = get_retrival_metrics(pos_scores, neg_scores)
-    hit3_metrics = {'H3': hit3_metrics}
+    acc_5, acc_5_metrics = get_retrival_metrics(pos_scores, neg_scores)
+    acc_5_metrics = {'Acc@5': acc_5_metrics}
 
     return {
         'average_precision': average_precision,
         'roc_auc': roc_auc,
-        **hit1_metrics,
         'weight': predicts.shape[0],
-        **hit2_metrics,
-        **hit3_metrics
-    }, hit1, hit2, hit3
+        **acc_2_metrics,
+        **acc_3_metrics,
+        **acc_5_metrics
+    }, acc_2, acc_3, acc_5
 
 def get_vote_avg_metrics(test_votes_all: list, test_ranks2_all: list, test_ranks3_all: list, test_acc: list, test_ranks2_single: list, test_ranks3_single: list, exp: int = 7, sample_groups: int = 3):
     experts_all = len(test_votes_all)

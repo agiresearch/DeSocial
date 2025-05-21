@@ -24,3 +24,5 @@ run_graph.sh
 *.sh
 train.py
 data/
+test.py
+run_old.py

@@ -12,10 +12,10 @@ def get_link_prediction_args(is_evaluation: bool = False):
     # arguments
     parser = argparse.ArgumentParser('Interface for the link prediction task')
     parser.add_argument('--dataset_name', type=str, help='dataset to be used', default='UCI',
-                        choices=['UCI', 'Enron', 'GDELT', 'Memo-Tx', 'Google', 'MOOC', 'Reddit'])
+                        choices=['UCI', 'Enron', 'GDELT', 'Memo-Tx'])
     parser.add_argument('--batch_size', type=int, default=1024, help='batch size')
-    parser.add_argument('--model_name', type=str, default='BCDSN', help='name of the model, note that EdgeBank is only applicable for evaluation',
-                        choices=['GCN', 'GAT', 'SAGE', 'MLP', 'LightGCN', 'TGAT', 'DyGFormer', 'CAWN', 'SGC', 'BCDSN'])
+    parser.add_argument('--model_name', type=str, default='SGC', help='name of the model, note that EdgeBank is only applicable for evaluation',
+                        choices=['GCN', 'GAT', 'SAGE', 'MLP', 'SGC', 'DeSocial'])
     parser.add_argument('--cuda', type=int, default=0, help='number of gpu to use')
     parser.add_argument('--num_neighbors', type=int, default=20, help='number of neighbors to sample for each node')
     parser.add_argument('--sample_neighbor_strategy', type=str, default='recent', choices=['uniform', 'recent', 'time_interval_aware'], help='how to sample historical neighbors')
@@ -56,7 +56,7 @@ def get_link_prediction_args(is_evaluation: bool = False):
     parser.add_argument('--out_dim', type=int, default=128, help='output dimension')
     parser.add_argument('--start_period', type=int, default=0, help='start time')
     parser.add_argument('--end_period', type=int, default=38, help='end time')
-    parser.add_argument('--name_tag', type=str, default='BCDSN-Run', help='name tag (distinguish different experiments)')
+    parser.add_argument('--name_tag', type=str, default='DeSocial-test', help='name tag (distinguish different experiments)')
     parser.add_argument('--test_interval_periods', type=int, default=10, help='test interval periods')
 
     ## Multi-Node Consensus Voting
@@ -70,7 +70,11 @@ def get_link_prediction_args(is_evaluation: bool = False):
 
     ## Web3 Infrastructure
     parser.add_argument('--provider_url', type=str, default='http://127.0.0.1:7545', help='provider url')
-    parser.add_argument('--contract_json_path', type=str, default='./contract/build/contracts/Web3SN.json', help='contract json')
+    parser.add_argument('--contract_json_path', type=str, default='./contract/build/contracts/DeSocial.json', help='contract json')
+    
+    ## Evaluation Metrics
+    ## We reported the run time based on observing one evaluation metric because the overload of voting and aggregation is high in serial, not parallel.
+    parser.add_argument('--metric', type=str, default="Acc@2", help='Evaluation metric to observe' )
 
     args = parser.parse_args()
     if args.load_best_configs:
@@ -179,7 +183,7 @@ def load_link_prediction_best_configs(args: argparse.Namespace):
             args.learning_rate = 0.001
         args.dropout = 0.7
     else:
-        if args.model_name == "BCDSN":
+        if args.model_name == "DeSocial":
             pass
         else:
             raise ValueError(f"Wrong model name {args.model_name}!")

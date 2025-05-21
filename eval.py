@@ -6,17 +6,16 @@ import numpy as np
 from torch_geometric.data import Data
 
 from utils.metrics import get_link_prediction_metrics
-from utils.utils import NegativeEdgeSampler, NeighborSampler
+from utils.utils import NegativeEdgeSampler
 from utils.DataLoader import Data
 
-def evaluate(model_name: str, model: nn.Module, neighbor_sampler: NeighborSampler, evaluate_idx_data_loader: DataLoader,
+def evaluate(model_name: str, model: nn.Module, evaluate_idx_data_loader: DataLoader,
              evaluate_neg_edge_sampler: NegativeEdgeSampler, evaluate_data: Data, loss_func: nn.Module,
              data: Data = None, device = "cpu", is_test = False, neg_size = 4):
     """
     evaluate models on the link prediction task
     :param model_name: str, name of the model
     :param model: nn.Module, the model to be evaluated
-    :param neighbor_sampler: NeighborSampler, neighbor sampler
     :param evaluate_idx_data_loader: DataLoader, evaluate index data loader
     :param evaluate_neg_edge_sampler: NegativeEdgeSampler, evaluate negative edge sampler
     :param evaluate_data: Data, data to be evaluated
@@ -49,11 +48,7 @@ def evaluate(model_name: str, model: nn.Module, neighbor_sampler: NeighborSample
                 batch_neg_src_node_ids = []
                 batch_neg_dst_node_ids = []
                 for i in range(neg_size):
-                    _, batch_neg_dst_node_ids_i = evaluate_neg_edge_sampler.sample(size=len(batch_src_node_ids),
-                                                                                    batch_src_node_ids=batch_src_node_ids,
-                                                                                    batch_dst_node_ids=batch_dst_node_ids,
-                                                                                    current_batch_start_time=batch_node_interact_times[0],
-                                                                                    current_batch_end_time=batch_node_interact_times[-1])
+                    _, batch_neg_dst_node_ids_i = evaluate_neg_edge_sampler.sample(size=len(batch_src_node_ids))
                     batch_neg_src_node_ids_i = batch_src_node_ids
                     batch_neg_src_node_ids.append(batch_neg_src_node_ids_i)
                     batch_neg_dst_node_ids.append(batch_neg_dst_node_ids_i)

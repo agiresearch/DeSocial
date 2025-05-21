@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch_geometric.nn import GCNConv, GATConv, SAGEConv, SGConv
+from torch_geometric.nn import GCNConv, SAGEConv, SGConv
 from torch_geometric.nn.models import LightGCN
 from torch_geometric.nn import GATv2Conv, BatchNorm
 
@@ -26,29 +26,6 @@ class GCN(nn.Module):
     def forward(self, data, edge_label_index):
         z = self.encode(data)
         return self.decode(z, edge_label_index).sigmoid()
-
-# class GAT(nn.Module):
-#     def __init__(self, in_channels, hidden_channels, out_channels):
-#         super(GAT, self).__init__()
-#         self.conv1 = GATConv(in_channels, hidden_channels, heads=8, concat=False)
-#         self.conv2 = GATConv(hidden_channels, out_channels, heads=8, concat=False)
-    
-#     def encode(self, data):
-#         x, edge_index = data.x, data.edge_index
-#         x = F.relu(self.conv1(x, edge_index))
-#         x = F.dropout(x, p=0.7, training=self.training)
-#         x = self.conv2(x, edge_index)
-#         return x
-
-#     def decode(self, z, edge_label_index):
-#         src = z[edge_label_index[0]]
-#         dst = z[edge_label_index[1]]
-#         return (src * dst).sum(dim=-1)
-
-#     def forward(self, data, edge_label_index):
-#         z = self.encode(data)
-#         return self.decode(z, edge_label_index).sigmoid()
-
 
 class GAT(nn.Module):
     def __init__(self, in_channels, hidden_channels, out_channels, heads=4, concat=False, dropout=0.7):
