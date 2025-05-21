@@ -8,7 +8,6 @@ import torch.nn.functional as F
 from torch_geometric.data import Data
 from utils.utils import set_random_seed, create_optimizer
 from utils.utils import NegativeEdgeSampler
-from utils.metrics import get_vote_avg_metrics
 from utils.DataLoader import Data as MyData
 from utils.DataLoader import get_idx_data_loader, get_link_prediction_data
 from utils.EarlyStopping import EarlyStopping
@@ -59,6 +58,11 @@ class BC_User:
         self.val_data = None
         self.test_data = None
         self.requests_collected = []
+        self.pa_requesters = []
+        self.pos_neighbor = []
+        self.neg_neighbor = []
+        self.task_result = []
+        self.task_results_to_comp = []
         self.validation_results = {}
         self.num_nodes = num_nodes
         

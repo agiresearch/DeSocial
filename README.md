@@ -52,6 +52,14 @@ pip install -r requirements.txt
 
 For the setup of ETH Ganache environment, please follow `ganache_install.md`.
 
+For the compilation of DeSocial smart contract, please use
+```bash
+cd contract
+truffle compile
+```
+
+After the compilation, you will see the smart contract json in `./contract/build/contracts/DeSocial.json`
+
 To run DeSocial, please use
 ```bash
 python run.py

@@ -80,10 +80,6 @@ def get_link_prediction_args(is_evaluation: bool = False):
     if args.load_best_configs:
         load_link_prediction_best_configs(args=args)
     
-    if args.use_feature == 'Bert':
-        args.time_dim = 768
-        args.position_feat_dim = 768
-
     return args
 
 def load_link_prediction_best_configs(args: argparse.Namespace):
@@ -93,46 +89,7 @@ def load_link_prediction_best_configs(args: argparse.Namespace):
     :return:
     """
     # model specific settings
-    if args.model_name == 'TGAT':
-        args.num_neighbors = 20
-        args.num_layers = 2
-        args.sample_neighbor_strategy = 'recent' # 'recent'
-    elif args.model_name in ['JODIE', 'DyRep', 'TGN']:
-        args.num_neighbors = 10
-        args.num_layers = 1
-        if args.model_name == 'JODIE':
-            args.dropout = 0.1
-        elif args.model_name == 'DyRep':
-            args.dropout = 0.1
-        else:
-            assert args.model_name == 'TGN'
-            args.num_neighbors = 5
-            args.max_input_sequence_length = 12
-            args.dropout = 0.1
-        if args.model_name in ['TGN', 'DyRep']:
-            args.sample_neighbor_strategy = 'recent'
-    elif args.model_name == 'CAWN':
-        args.time_scaling_factor = 1e-6
-        args.num_neighbors = 32
-        args.dropout = 0.1
-        args.sample_neighbor_strategy = 'time_interval_aware'
-    elif args.model_name == 'TCL':
-        args.num_neighbors = 20
-        args.num_layers = 2
-        args.dropout = 0.1
-        args.sample_neighbor_strategy = 'recent'
-    elif args.model_name == 'GraphMixer':
-        args.num_layers = 2
-        args.patience = 5
-        args.num_neighbors = 20
-        args.dropout = 0.1
-        args.sample_neighbor_strategy = 'recent'
-    elif args.model_name == 'DyGFormer':
-        args.num_layers = 2
-        args.max_input_sequence_length = 48
-        args.patch_size = 1
-        args.dropout = 0.1
-    elif args.model_name == "MLP":
+    if args.model_name == "MLP":
         if args.dataset_name == "UCI":
             args.learning_rate = 0.005
         elif args.dataset_name == "Memo-Tx":

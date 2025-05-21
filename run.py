@@ -16,6 +16,7 @@ from utils.DataLoader import Data
 from utils.DataLoader import get_idx_data_loader, get_link_prediction_data
 from utils.load_configs import get_link_prediction_args, load_link_prediction_best_configs, load_lr_given_models, get_num_users
 from model.dispatcher import Dispatcher
+from model.select import Selection
 import copy
 
 from blockchain.user import BC_User
@@ -48,6 +49,9 @@ if __name__ == "__main__":
 
     results = []
     
+    ##########################################
+    # The blockchain and user storage setup. # 
+    ##########################################
     # Initialize the blockchain.
     num_users = get_num_users(args.dataset_name)
     num_nodes = num_users
@@ -104,6 +108,9 @@ if __name__ == "__main__":
         user_storage[i].train_data = train_data
         user_storage[i].val_data = val_data
 
+    #####################
+    # DeSocial Pipeline #
+    #####################
     logger.info("Start training and testing period by period...")
     for t in range(args.start_period, args.end_period):
         logger.info(f"Current Period: {t + 1}")
@@ -193,23 +200,44 @@ if __name__ == "__main__":
                 validator = validator_selected[i][j]
                 logger.info(f"Expert {j} @ {backbone_models[i]}: {validator}")
                 logger.info(f'{validator} is requesting test task package at time {t+2} from {inter_terminal}...')
-                # 重命名一下
                 save_model_name_with_params = f"{args.save_model_name}-{backbone_models[i]}-{args.dataset_name}-lr={args.learning_rate}-experts={args.experts}-order={j}-t={t+1}-{args.strategy}"
                 save_model_folder = f"./saved_models/{args.model_name}/{args.dataset_name}/{args.save_model_name}/{save_model_name_with_params}/"
                 os.makedirs(save_model_folder, exist_ok=True)
                 user_storage[validator].give_prediction(logger, args, save_model_folder, model_name_with_params)
         
-        ############################################################################
-        # Step 4. Each requester p create a historical neighborhood sampling task. #
-        ############################################################################
+        #############################################################################
+        # Step 4. Each requester p creates a historical neighborhood sampling task. #
+        #############################################################################
+        create_start_time = time.time()
+        logger.info("Each requester is creating the historical neighborhood sampling task...")
+        train_data_cur = user_storage[inter_terminal].train_data
+        val_data_cur = user_storage[inter_terminal].val_data
+        selection = Selection(train_data, val_data, t+2, num_nodes, node_raw_features, 
+                              args.device, alpha=args.alpha, gamma=args.num_neighbor_samples)
+        selection.neighbor_setup()
         
+        for p in unique_src:
+            pos_neighbor, neg_neighbor = selection.create_neighbor_samples(p)
+            user_storage[p].pos_neighbor = pos_neighbor
+            user_storage[p].neg_neighbor = neg_neighbor
+
+        create_end_time = time.time()
+        create_time = create_end_time - create_start_time
+        logger.info(f"Amortized Step 4 (Create) time: {np.round(create_time / num_of_request_src, 4)}.")
         
         ###########################################################################################################
         # Step 5. Each requester p sends the request to evaluate the neighbor sampling task on various backbones. #
         ###########################################################################################################
+        pos_neighbors = []
+        neg_neighbors = []
         pa5_start = time.time()
         for i in range(num_of_request_src):
             user_storage[unique_src[i]].send_a_request(0, inter_terminal, t+2)
+            # the intermediate counts the requesters.
+            user_storage[inter_terminal].pa_requesters.append(unique_src[i])
+            pos_neighbors.append(user_storage[unique_src[i]].pos_neighbor)
+            neg_neighbors.append(user_storage[unique_src[i]].neg_neighbor)
+        
         pa5_end = time.time()
         pa5_time = pa5_end - pa5_start
         logger.info(f"Amortized Step 5 time: {np.round(pa5_time / num_of_request_src, 4)}.")
@@ -217,14 +245,32 @@ if __name__ == "__main__":
         ########################################################################
         # Step 6. One of the nodes in each validator community take the tasks. #
         ########################################################################
+        for model_name in backbone_models:
+            model = dispatcher(model_name, args)
+            node_lr = load_lr_given_models(model_name=model_name, 
+                                            dataset_name=args.dataset_name)
+            
+            load_model_name = f'{model_name}_{args.name_tag}_'
+            load_model_name_with_params = f"{load_model_name}-{args.dataset_name}-lr={node_lr}-experts={args.experts}-order=0-t={t+1}-full"
+            load_model_folder = f"./saved_models/{model_name}/{args.dataset_name}/{load_model_name}/{load_model_name_with_params}/"
+            load_model_path = os.path.join(load_model_folder, f"{load_model_name}-{args.dataset_name}-lr={node_lr}-experts={args.experts}-full.pt")
+            selection.backbones.append(model)
         
-        
+        for backbone_id in range(len(selection.backbones)):
+            validator = validator_selected[backbone_id][0]
+            # each backbone model will take the tasks and return the results.
+            user_storage[validator].task_result = selection.take_exam(pos_neighbors, neg_neighbors, backbone_id)
+
         ######################################################################################
         # Step 7. The requesters are returned the test results from each candidate backbone. #
         ######################################################################################
         pa7_start = time.time()
         for i in range(num_of_request_src):
             user_storage[unique_src[i]].send_a_request(0, inter_terminal, t+2)
+            for backbone_id in range(len(selection.backbones)):
+                validator = validator_selected[backbone_id][0]
+                user_storage[unique_src[i]].task_results_to_comp.append(user_storage[validator].task_result[i])
+                
         pa7_end = time.time()
         pa7_time = pa7_end - pa7_start
         logger.info(f"Amortized Step 7 time: {np.round(pa7_time / num_of_request_src, 4)}.")
@@ -232,7 +278,15 @@ if __name__ == "__main__":
         #############################################################
         # Step 8. The requester specify its personalized algorithm. #
         #############################################################
-        # 比较最大的那个
+        logger.info("The requesters are selecting the best backbone model...")
+        backbones = []
+        for i in range(num_of_request_src):
+            # get the test results for each backbone model
+            # and select the best one.
+            task_result_array = np.array(user_storage[unique_src[i]].task_results_to_comp)
+            # select the best backbone model
+            best_backbone = np.argmax(task_result_array)
+            backbones.append(best_backbone)
         
         ##########################################################################
         # Step 9. User give their votes and the blockchain aggregates the votes. #
@@ -241,12 +295,11 @@ if __name__ == "__main__":
         vote_start_time = time.time()
         decisions = []
         for i in tqdm(range(num_requests)):
-            
             p = int(test_data.src_node_ids[i])
             q = int(test_data.dst_node_ids[i])
             # Setting the personalized algorithm for each request user p.
-            # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ REMEMBER TO REPLACE TEH PA!!! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-            personalized_algorithm = 0
+            # This is very important because the correct validator community need to give votes.
+            personalized_algorithm = backbones[p]
             validator_p = validator_selected[personalized_algorithm]
             for j in range(args.experts):
                 validator = validator_p[j]
@@ -284,6 +337,14 @@ if __name__ == "__main__":
             for i in tqdm(range(1, num_nodes)):
                 user_storage[i].train_data = user_storage[0].train_data
                 user_storage[i].val_data = user_storage[0].val_data
+        
+        # Empty the storage of current period requests.
+        user_storage[inter_terminal].requests_collected = []
+        user_storage[inter_terminal].pa_requesters = []
+        for p in unique_src:
+            user_storage[p].pos_neighbor = []
+            user_storage[p].neg_neighbor = []
+            user_storage[p].task_results = []
         
     logger.info("Testing finished.")
     logger.info("Printing results...")

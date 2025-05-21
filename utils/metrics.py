@@ -51,61 +51,6 @@ def get_link_prediction_metrics(predicts: torch.Tensor, labels: torch.Tensor, ne
         **acc_5_metrics
     }, acc_2, acc_3, acc_5
 
-def get_vote_avg_metrics(test_votes_all: list, test_ranks2_all: list, test_ranks3_all: list, test_acc: list, test_ranks2_single: list, test_ranks3_single: list, exp: int = 7, sample_groups: int = 3):
-    experts_all = len(test_votes_all)
-    assert experts_all >= exp, "Not enough experts to sample from."
-
-    all_combs = list(itertools.combinations(range(experts_all), exp))
-    selected_combs = random.sample(all_combs, k=sample_groups)
-    vote_acc_list = []
-    avg_acc_list = []
-    vote_rank2_list = []
-    avg_rank2_list = []
-    vote_rank3_list = []
-    avg_rank3_list = []
-
-    for comb in selected_combs:
-        votes = torch.stack([test_votes_all[i] for i in comb], dim=0)
-        vote_sum = torch.sum(votes, dim=0)
-        final_votes = (vote_sum > (exp // 2)).float()
-        vote_acc = torch.mean(final_votes).item()
-        avg_acc = np.mean([test_acc[i] for i in comb])
-        vote_acc_list.append(vote_acc)
-        avg_acc_list.append(avg_acc)
-    
-    for comb in selected_combs:
-        ranks2 = torch.stack([test_ranks2_all[i] for i in comb], dim=0)
-        rank2_sum = torch.sum(ranks2, dim=0)
-        final_votes2 = (rank2_sum > (exp // 2)).float()
-        vote_rank2_acc = torch.mean(final_votes2).item()
-        avg_rank2 = np.mean([test_ranks2_single[i] for i in comb])
-        vote_rank2_list.append(vote_rank2_acc)
-        avg_rank2_list.append(avg_rank2)
-
-    for comb in selected_combs:
-        ranks3 = torch.stack([test_ranks3_all[i] for i in comb], dim=0)
-        rank3_sum = torch.sum(ranks3, dim=0)
-        final_votes3 = (rank3_sum > (exp // 2)).float()
-        vote_rank3_acc = torch.mean(final_votes3).item()
-        avg_rank3 = np.mean([test_ranks3_single[i] for i in comb])
-        vote_rank3_list.append(vote_rank3_acc)
-        avg_rank3_list.append(avg_rank3)
-
-    vote_acc_mean = np.round(np.mean(vote_acc_list), 4)
-    vote_acc_std = np.round(np.std(vote_acc_list), 4)
-    avg_acc_mean = np.round(np.mean(avg_acc_list), 4)
-    avg_acc_std = np.round(np.std(avg_acc_list), 4)
-    vote_rank2_acc_mean = np.round(np.mean(vote_rank2_list), 4)
-    vote_rank2_acc_std = np.round(np.std(vote_rank2_list), 4)
-    avg_rank2_mean = np.round(np.mean(avg_rank2_list), 4)
-    avg_rank2_std = np.round(np.std(avg_rank2_list), 4)
-    vote_rank3_acc_mean = np.round(np.mean(vote_rank3_list), 4)
-    vote_rank3_acc_std = np.round(np.std(vote_rank3_list), 4)
-    avg_rank3_mean = np.round(np.mean(avg_rank3_list), 4)
-    avg_rank3_std = np.round(np.std(avg_rank3_list), 4)
-
-    return avg_acc_mean, avg_acc_std, vote_acc_mean, vote_acc_std, avg_rank2_mean, avg_rank2_std, vote_rank2_acc_mean, vote_rank2_acc_std, avg_rank3_mean, avg_rank3_std, vote_rank3_acc_mean, vote_rank3_acc_std
-
 def get_retrival_metrics(pos_scores: torch.Tensor, neg_scores: torch.Tensor):
     """
     get metrics for the link prediction task
