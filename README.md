@@ -25,7 +25,7 @@ Here gives the framework of DeSocial (both modules enabled).
     
 **Step 2:** The blockchain collects all user requests, constructs $\mathcal{G}^{t+1}$, and assigns a validator community $\Phi$ according to each backbone model $\mathcal{F}_i\in \mathcal{F}$ through the smart contract.
     
-**Step 3:** Each validator $\phi \in \mathcal{V}_{val}^t$ independently trains their own graph learning model $f_{\theta_\phi}$ based on the data $\mathcal{D}^t$ stored in their own local memory. $\mathcal{D}^t$ describes the union of the historical snapshots $\mathcal{G}^0, \mathcal{G}^1, ..., \mathcal{G}^t$, and each node stored one copy of $\mathcal{D}^t$.
+**Step 3:** Each validator selected in this period independently trains their own graph learning model based on the data $\mathcal{D}^t$ stored in their own local memory. $\mathcal{D}^t$ describes the union of the historical snapshots $\mathcal{G}^0, \mathcal{G}^1, ..., \mathcal{G}^t$, and each node stored one copy of $\mathcal{D}^t$.
     
 **Step 4:** User $p_i$ creates a personalized neighborhood sampling task based on local graph structure.
     
@@ -35,9 +35,9 @@ Here gives the framework of DeSocial (both modules enabled).
     
 **Step 7:** The result of each algorithm trial is returned to $p_i$ through the blockchain for evaluation.
     
-**Step 8:** User $p_i$ selects a preferred model $\mathcal{F}_{p_i}$ based on the returned results.
+**Step 8:** User $p_i$ selects a preferred model based on the returned results.
     
-**Step 9:** Validators in $\Phi$ run $\mathcal{F}_{p_i}$ on $p_i$'s request and submit their binary votes to the blockchain. The blockchain aggregates the votes to form the final prediction $\mathcal{G}^{t+1}_{pred}$. Both the voting and aggregating operations are defined by the smart contract.
+**Step 9:** Validators in $\Phi$ run $p_i$'s persoanlized algorithm on $p_i$'s request and submit their binary votes to the blockchain. The blockchain aggregates the votes to form the final prediction. Both the voting and aggregating operations are defined by the smart contract.
 
 **Step 10:** The period ends, all the nodes in the network updates their local social network data $\mathcal{D}^t$ via requesting the blockchain for the latest links by the smart contract.
 
@@ -62,9 +62,11 @@ To quickly reproduce the result of DeSocial in the best configuration, please us
 python run.py --cuda $CUDA --dataset_name $DATASET --f_pool $F --experts $EXPERTS --metric $METRIC --load_best_configs
 ```
 
+The range of some important arguments are specified below:
 ```
 $F in [MLP, GCN, GAT, SAGE, SGC]
-$F 
+$DATASET in [UCI, Memo-Tx, Enron, GDELT]
+$METRIC in [Acc@2, Acc@3, Acc@5]
 ```
 
 For example, if you want to reproduce DeSocial-X (with validator community size of 5), X is one of the backbones, let's say SGC on UCI, please use
