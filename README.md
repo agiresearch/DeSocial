@@ -15,7 +15,7 @@ DeSocial/
 │    ├── contracts/contract.sol        # The Solidity smart contract.
 │    └── other files:                  # The compilation environment.
 │
-├── data/                          # Processed data. (need to create a directory)
+├── data/                          # Processed data.
 |    └──$DATASET                       # The dataset name
 │           ├── edge_list.csv          # The graph edge data.
 │           └── node_feat.npy          # The input node features.
@@ -32,9 +32,9 @@ DeSocial/
 │    ├── metrics.py                    # Evaluation metric calculation.
 │    └── utils.py                      # Misc functions. (negative sampling, initiate validator groups, etc.)
 │
-├── eval.py                        # Evaluation functions
+├── eval.py                        # Evaluation functions.
 │
-└── run.py                         # Main entry to run the pipeline (including the decentralized multi-validator consensus module.)
+└── run.py                         # Main entry to run the pipeline (including the decentralized multi-validator consensus module).
 ```
 
 ## 📊 Datasets
@@ -55,14 +55,28 @@ The graph training algorithms are implemented based on the open-source [DTGB](ht
 
 ## ✈️ Quickstart
 
-After downloading the repo to your computer/server, please install all the dependencies by:
+After downloading the repository, please install all the dependencies by
 ```bash
+python -m venv DeSocial
+source DeSocial/bin/activate
 pip install -r requirements.txt
+```
+
+If you want to deactivate the environment, simply run
+```bash
+deactivate
 ```
 
 For the setup of ETH [Ganache](https://archive.trufflesuite.com/ganache/) environment, please follow `ganache_install.md`.
 
-To create DeSocial smart contract jsons and import them into python, we use [Truffle](https://archive.trufflesuite.com/) to compile the smart contracts written in Solidity programming language. Following the instructions:
+To create DeSocial smart contract jsons and import them into python, we use [Truffle](https://archive.trufflesuite.com/) to compile the smart contracts written in Solidity programming language. 
+
+To install Truffle, you can use `npm`.
+```bash
+npm install -g truffle
+```
+
+Following the instructions to generate the smart contract json:
 ```bash
 cd contract
 truffle compile
