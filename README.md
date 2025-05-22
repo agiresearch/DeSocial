@@ -55,6 +55,8 @@ The graph training algorithms are implemented based on the open-source [DTGB](ht
 
 ## ✈️ Quickstart
 
+### DeSocial Running Environment
+
 After downloading the repository, please install all the dependencies by
 ```bash
 python -m venv DeSocial
@@ -66,6 +68,8 @@ If you want to deactivate the environment, simply run
 ```bash
 deactivate
 ```
+
+### Blockchain Smart Contract Compilation Environment
 
 For the setup of ETH [Ganache](https://archive.trufflesuite.com/ganache/) environment, please follow `ganache_install.md`.
 
@@ -83,6 +87,8 @@ truffle compile
 ```
 
 After the compilation, you will see the smart contract json in `./contract/build/contracts/DeSocial.json`
+
+### Running DeSocial
 
 To run DeSocial, please run
 ```bash
