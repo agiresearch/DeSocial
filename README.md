@@ -120,6 +120,16 @@ python run.py --cuda 0 --dataset_name UCI --f_pool SAGE+SGC --experts 5 --start_
 ```
 use "+" to combine the backbone names.
 
+If you want to disable the decentralized multi-validator consensus, please run
+```bash
+python run.py --cuda 0 --dataset_name UCI --f_pool PA --experts 1 --start_period 28 --metric Acc@2 --load_best_configs
+```
+
+If you just want to try a single backbone, please run
+```bash
+python run.py --cuda 0 --dataset_name UCI --f_pool SGC --experts 1 --start_period 28 --metric Acc@2 --load_best_configs
+```
+
 Different from centralized algorithms, in each period the blockchain selects different validators. As there are tens of thousands of nodes, it's likely to train every validator given random ML parameters. Therefore, we can reproduce the result from the first testing period. As t+2=30 (the first testing period), the start period is set to 28.
 
 We reported the run time based on observing one evaluation metric because the overload of voting and aggregation is high in serial, not parallel.
