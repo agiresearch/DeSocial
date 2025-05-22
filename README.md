@@ -7,12 +7,34 @@ This repository contains the source code for the DeSocial project. DeSocial is a
 ```
 DeSocial/
 │
-├── blockchain/ # Blockchain simulation environment and client scripts
-├── contract/ # Solidity smart contracts for validator voting, user actions, etc.
-├── model/ # Graph learning models, and personalized algorithm selection module (e.g., GCN, GAT, etc.)
-├── utils/ # Utility functions and helpers
-├── eval.py # Evaluation functions
-└── run.py # Main entry point to run the pipeline
+├── blockchain/                    # Blockchain simulation environment and client scripts
+│    ├── blockchain.py                 # Blockchain infrastructure
+│    └── user.py                       # Actions of the users (request, vote, train models, aggregation, etc.)
+│
+├── contract/                      # Solidity smart contracts for validator voting, user actions, etc.
+│    ├── contracts/contract.sol        # The Solidity smart contract.
+│    └── other files:                  # The compilation environment.
+│
+├── data/                          # Processed data. (need to create a direction)
+|    └──$DATASET                       # The dataset name
+│           ├── edge_list.csv          # The graph edge data.
+│           └── node_feat.npy          # The input node features.
+│
+├── model/                         # Graph learning models, and personalized algorithm selection module (e.g., GraphSAGE, GCN, GAT, etc.)
+│    ├── dispatcher.py                 # Model dispatcher, returning an instance of model given its name.
+│    ├── models.py                     # Graph algorithm classes.
+│    └── select.py                     # The personalized algorithm selection module.
+│
+├── utils/                         # Utility functions and helpers
+│    ├── DataLoader.py                 # Data loader.
+│    ├── EarlyStopping.py              # Early stopping of the graph training.
+│    ├── load_configs.py               # DeSocial config settings.
+│    ├── metrics.py                    # Evaluation metric calculation.
+│    └── utils.py                      # Misc functions. (negative sampling, initiate validator groups, etc.)
+│
+├── eval.py                        # Evaluation functions
+│
+└── run.py                         # Main entry to run the pipeline (including the decentralized multi-validator consensus module.)
 ```
 
 ## 🏗️ Framework
