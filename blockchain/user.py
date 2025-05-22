@@ -110,7 +110,6 @@ class BC_User:
                 1. the receiver signs the retrieval.
                 2. the receiver copies the ground truth edges to its local data storage.
         """
-        # broadcast的逻辑，看看这个输入的参数，是不是smart contract里存的inter_terminal，不允许乱拿
         while True:
             tx = self.contract.functions.broadcast(inter_terminal).transact({
                 "from": self.bc_address,

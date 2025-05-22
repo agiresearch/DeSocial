@@ -120,22 +120,6 @@ class MLP(nn.Module):
         z = self.encode(data)
         return self.decode(z, edge_label_index)
 
-class LGCN(nn.Module):
-    def __init__(self, in_channels, hidden_channels, out_channels):
-        super(LGCN, self).__init__()
-        self.encoder = LightGCN(in_channels, out_channels, num_layers = 2)
-    
-    def decode(self, z, edge_label_index):
-        src = z[edge_label_index[0]]
-        dst = z[edge_label_index[1]]
-        r = (src * dst).sum(dim=-1)
-        return r
-
-    def forward(self, data, edge_label_index):
-        edge_index = data.edge_index
-        z = self.encoder.get_embedding(edge_index)
-        return self.decode(z, edge_label_index)
-
 class SGC(nn.Module):
     def __init__(self, in_channels, out_channels, K=2):
         super(SGC, self).__init__()

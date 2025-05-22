@@ -257,19 +257,14 @@ if __name__ == "__main__":
         ########################################################################
         # Step 6. One of the nodes in each validator community take the tasks. #
         ########################################################################
-        for model_name in backbone_models:
-            model = dispatcher.dispatch(model_name, args=args)
-            load_model_name = f'{args.model_name}_{args.name_tag}_'
-            load_model_name_with_params = f"{load_model_name}-{model_name}-{args.dataset_name}-experts={args.experts}-order=0-t={t+1}-full"
-            load_model_folder = f"./saved_models/{args.model_name}/{args.dataset_name}/{load_model_name}/{load_model_name_with_params}/"
-            load_model_path = os.path.join(load_model_folder, f"{load_model_name}-{args.dataset_name}-experts={args.experts}-full.pt")
-            model.load_state_dict(torch.load(load_model_path, map_location=torch.device(args.device)))
-            selection.backbones.append(model)
+        for i in range(len(validator_communities)):
+            validator = validator_selected[i][0]
+            selection.backbones.append(validator)
         
         for backbone_id in range(len(selection.backbones)):
             validator = validator_selected[backbone_id][0]
             # each backbone model will take the tasks and return the results.
-            user_storage[validator].task_result = selection.take_exam(pos_neighbors, neg_neighbors, neighbor_weights, backbone_id)
+            user_storage[validator].task_result = selection.take_exam(pos_neighbors, neg_neighbors, neighbor_weights, validator)
 
         ######################################################################################
         # Step 7. The requesters are returned the test results from each candidate backbone. #

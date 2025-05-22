@@ -6,6 +6,7 @@ import networkx as nx
 from tqdm import tqdm
 from collections import defaultdict
 from torch_geometric.data import Data
+from blockchain.user import user_storage
 
 class Selection():
     def __init__(self, train_data, val_data, current_time, num_nodes, request_nodes, node_raw_features, device, batch_size=32768, alpha=0, gamma = 250):
@@ -87,7 +88,8 @@ class Selection():
         """
             Create positive and negative neighbor samples for a given node.
         """
-
+        # Sample negative neighbors. Different random seeds can be used to generate different negative samples, which may affect the results.
+        #np.random.seed(42)
         neg_dst = np.random.randint(0, self.num_nodes, self.gamma)
         edge_label_index = []
         edge_label_index_neg = []
@@ -105,13 +107,13 @@ class Selection():
         
         return edge_label_index, edge_label_index_neg, node_interact_time_weights
     
-    def take_exam(self, pos_neighbor, neg_neighbor, neighbor_weights, backbone_id):
+    def take_exam(self, pos_neighbor, neg_neighbor, neighbor_weights, node_id):
         """
             Perform the neighbor sample tasks for all the requesters, and return the test results.
             Input:
                 pos_neighbor: Positive neighbor samples
                 neg_neighbor: Negative neighbor samples
-                backbone_id: The ID of the backbone model to use
+                node_id: The node standing for the backbone model
             Return:
                 backbone_node_prob: The test results for the selected backbone model
         """
@@ -131,7 +133,7 @@ class Selection():
         backbone_node_prob = np.zeros(self.request_nodes, )
 
         # use each backbone to do the prediction
-        model = self.backbones[backbone_id].to(self.device)
+        model = user_storage[node_id].model.to(self.device)
         # node_raw_feature is the input, predicted probabilities is the output.
         all_preds = []
         num_edges = edge_label_index.shape[1]
