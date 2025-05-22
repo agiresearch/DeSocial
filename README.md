@@ -34,7 +34,11 @@ DeSocial/
 │
 ├── eval.py                        # Evaluation functions.
 │
-└── run.py                         # Main entry to run the pipeline (including the decentralized multi-validator consensus module).
+├── run.py                         # Main entry to run the pipeline (including the decentralized multi-validator consensus module).
+│
+├── ganache_install.md             # Ganache installation instructions.
+│
+└── requirements.txt               # DeSocial execution environment dependencies.
 ```
 
 ## 📊 Datasets
@@ -55,7 +59,7 @@ The graph training algorithms are implemented based on the open-source [DTGB](ht
 
 ## ✈️ Quickstart
 
-### DeSocial Running Environment
+### DeSocial Execution Environment
 
 After downloading the repository, please install all the dependencies by
 ```bash
