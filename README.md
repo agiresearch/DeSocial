@@ -37,34 +37,6 @@ DeSocial/
 └── run.py                         # Main entry to run the pipeline (including the decentralized multi-validator consensus module.)
 ```
 
-## 🏗️ Framework
-
-Here gives the framework of DeSocial (both modules enabled).
-
-![DeSocial](img/DeSocial.png)
-
-**Step 1:** User $p_i$ submits requests to predict social links with target nodes $q_{1_{p_i}}, q_{2_{p_i}}, \dots$.
-    
-**Step 2:** The blockchain collects all user requests, constructs $\mathcal{G}^{t+1}$, and assigns a validator community $\Phi$ according to each backbone model $\mathcal{F}_i\in \mathcal{F}$ through the smart contract.
-    
-**Step 3:** Each validator selected in this period independently trains their own graph learning model based on the data $\mathcal{D}^t$ stored in their own local memory. $\mathcal{D}^t$ describes the union of the historical snapshots $\mathcal{G}^0, \mathcal{G}^1, ..., \mathcal{G}^t$, and each node stored one copy of $\mathcal{D}^t$.
-    
-**Step 4:** User $p_i$ creates a personalized neighborhood sampling task based on local graph structure.
-    
-**Step 5:** Validator nodes retrieve $p_i$'s request  through the blockchain smart contract, and evaluate it using different available algorithms $\mathcal{F}_j$.
-    
-**Step 6:** One selected validator in each community executes the sampling task using algorithm $\mathcal{F}_j$ and returns results to the blockchain through the smart contract.
-    
-**Step 7:** The result of each algorithm trial is returned to $p_i$ through the blockchain for evaluation.
-    
-**Step 8:** User $p_i$ selects a preferred model based on the returned results.
-    
-**Step 9:** Validators in $\Phi$ run $p_i$'s persoanlized algorithm on $p_i$'s request and submit their binary votes to the blockchain. The blockchain aggregates the votes to form the final prediction. Both the voting and aggregating operations are defined by the smart contract.
-
-**Step 10:** The period ends, all the nodes in the network copy the social network data  $\mathcal{G}^{t+1}$ and merge it to their local memory via the blockchain for the latest links by the smart contract.
-
-For the details of these notations, please refer the problem definitions in our paper.
-
 ## ✈️ Quickstart
 
 After downloading the repo to your computer/server, please install all the dependencies by:
