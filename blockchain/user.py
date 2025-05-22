@@ -1,6 +1,6 @@
 from web3 import Web3
 import numpy as np
-from utils.DataLoader import Data
+from utils.dataloader import Data
 
 import torch
 import torch.nn as nn
@@ -8,10 +8,10 @@ import torch.nn.functional as F
 from torch_geometric.data import Data
 from utils.utils import set_random_seed, create_optimizer
 from utils.utils import NegativeEdgeSampler
-from utils.DataLoader import Data as MyData
-from utils.DataLoader import get_idx_data_loader, get_link_prediction_data
-from utils.EarlyStopping import EarlyStopping
-from utils.load_configs import get_link_prediction_args, load_link_prediction_best_configs, load_lr_given_models, get_num_users
+from utils.dataloader import Data as MyData
+from utils.dataloader import get_idx_data_loader, get_link_prediction_data
+from utils.earlystopping import EarlyStopping
+from utils.configs import get_link_prediction_args, load_link_prediction_best_configs, load_lr_given_models, get_num_users
 from model.dispatcher import Dispatcher
 from eval import evaluate
 import os
@@ -41,6 +41,15 @@ class BC_User:
                 val_data: the validation data.
                 test_data: the test data.
                 requests_collected: the requests collected from the source nodes.
+                pa_requesters: the requesters of the personalized model.
+                pos_neighbor: the positive neighbors of the user.
+                neg_neighbor: the negative neighbors of the user.
+                neighbor_weight: the weights of the neighbors.
+                task_result: the results of the tasks.
+                task_results_to_comp: the results of the tasks to be compared.
+                validation_results: the results of the validation.
+                num_nodes: the number of nodes in the system.
+                neighbor_sample_list: the list of neighbor samples.
         """
 
         ## Web3 Properties
@@ -58,6 +67,9 @@ class BC_User:
         self.val_data = None
         self.test_data = None
         self.requests_collected = []
+        self.num_nodes = num_nodes
+
+        # Local Data Storage (User Backbone Selection)
         self.pa_requesters = []
         self.pos_neighbor = []
         self.neg_neighbor = []
@@ -65,9 +77,6 @@ class BC_User:
         self.task_result = []
         self.task_results_to_comp = []
         self.validation_results = {}
-        self.num_nodes = num_nodes
-        
-        # User Backbone Selection
         self.neighbor_sample_list = []
     
     def send_a_request(self, target, inter_terminal, timestamp):
@@ -94,39 +103,16 @@ class BC_User:
 
     def retrieve_test_data(self, inter_terminal):
         """
-            Signed by the validator.
             The validator retrieves the test data from the intermediate terminal node.
-            Parameters:
+            Input:
                 inter_terminal: the intermediate terminal node.
         """
         self.contract.functions.retrieve(int(inter_terminal)).call()
         self.test_data = user_storage[inter_terminal].test_data
 
-    def broadcast(self, inter_terminal):
-        """
-            Signed by the receiver.
-            After validating all the tasks in predicting the next preiod, all the ground truth edges will be broadcast to everyone, preparing for the next period's experiment.
-            Step:
-                1. the receiver signs the retrieval.
-                2. the receiver copies the ground truth edges to its local data storage.
-        """
-        while True:
-            tx = self.contract.functions.broadcast(inter_terminal).transact({
-                "from": self.bc_address,
-                "gas": 300000,
-                "gasPrice": self.web3.to_wei("20", "gwei")
-            })
-            tx_receipt = self.web3.eth.wait_for_transaction_receipt(tx)
-            if tx_receipt["status"] == 1:
-                # user_storage[target].test_data
-                self.update_social_network()
-                # if the transaction is successful, the ground truth edges are broadcasted to everyone.
-                self.test_data = user_storage[inter_terminal].test_data
-                break
-
     def select_validators(self, val_tot, val_num):
         """
-            the intermediate terminal node request the blockchain to choose validator randomly.
+            The intermediate terminal node request the blockchain to choose validator randomly.
             Parameters:
                 val_tot: the total number of validators in a specified backbone community.
                 val_num: the number of validators to be chosen.
@@ -148,6 +134,8 @@ class BC_User:
     def vote(self, agree):
         """
             Each validator give their votes based on their backbone.
+            Input:
+                agree: the vote of the validator.
         """
         tx = self.contract.functions.vote(self.bc_address, agree).transact({
             "from": self.bc_address,
@@ -168,12 +156,17 @@ class BC_User:
         self.train_data = MyData(src_node_ids=src_node_ids, dst_node_ids=dst_node_ids, node_interact_times=node_interact_times)
         self.val_data = self.test_data
     
-    # Here is the machine learning part.
+    # Here is the social network learning part.
     # The user will train the model and update their own model.
     def give_prediction(self, logger, args, save_model_folder, model_name_with_params):
         """
             The validator will give the prediction of the next period.
             The validator will train the model and update their own model.
+            Input:
+                logger: the logger object.
+                args: the arguments for the model.
+                save_model_folder: the folder to save the model.
+                model_name_with_params: the name of the model with parameters.
         """
         train_data = self.train_data
         val_data = self.val_data
@@ -283,6 +276,10 @@ class BC_User:
     def give_votes(self, logger, request_id, metric_to_observe):
         """
             For every requests, the validator will give their votes, by calling the smart contract.
+            Input:
+                logger: the logger object.
+                request_id: the id of the request.
+                metric_to_observe: the metric to observe.
         """
         # Here the validator will give their votes.
         metrics = [metric_to_observe]

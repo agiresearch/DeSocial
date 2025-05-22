@@ -7,12 +7,13 @@ class EarlyStopping(object):
 
     def __init__(self, patience: int, save_model_folder: str, save_model_name: str, logger: logging.Logger, model_name: str = None):
         """
-        Early stop strategy.
-        :param patience: int, max patience
-        :param save_model_folder: str, save model folder
-        :param save_model_name: str, save model name
-        :param logger: Logger
-        :param model_name: str, model name
+            Early stop strategy.
+            Input:
+                patience: int, max patience
+                save_model_folder: str, save model folder
+                save_model_name: str, save model name
+                logger: Logger
+                model_name: str, model name
         """
         self.patience = patience
         self.counter = 0
@@ -24,10 +25,10 @@ class EarlyStopping(object):
 
     def step(self, metrics: list, model: nn.Module):
         """
-        execute the early stop strategy for each evaluation process
-        :param metrics: list, list of metrics, each element is a tuple (str, float, boolean) -> (metric_name, metric_value, whether higher means better)
-        :param model: nn.Module
-        :return:
+            Execute the early stop strategy for each evaluation process
+            Input:
+                metrics: list, list of metrics, each element is a tuple (str, float, boolean) -> (metric_name, metric_value, whether higher means better)
+                model: nn.Module
         """
         metrics_compare_results = []
         for metric_tuple in metrics:
@@ -60,18 +61,18 @@ class EarlyStopping(object):
 
     def save_checkpoint(self, model: nn.Module):
         """
-        saves model at self.save_model_path
-        :param model: nn.Module
-        :return:
+            saves model at self.save_model_path
+            Input:
+                model: nn.Module
         """
         self.logger.info(f"save model {self.save_model_path}")
         torch.save(model.state_dict(), self.save_model_path)
 
     def load_checkpoint(self, model: nn.Module, map_location: str = None):
         """
-        load model at self.save_model_path
-        :param model: nn.Module
-        :return:
+            load model at self.save_model_path
+            Input:
+                model: nn.Module
         """
         self.logger.info(f"load model {self.save_model_path}")
         model.load_state_dict(torch.load(self.save_model_path))

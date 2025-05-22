@@ -6,6 +6,12 @@ class Dispatcher(object):
         pass
 
     def dispatch(self, node_model_type, args):
+        """
+            Dispatch the model based on the node_model_type.
+            Input:
+                node_model_type: str, type of the model
+                args: arguments for the model
+        """
 
         if node_model_type == "GCN":
             model = GCN(in_channels=args.in_dim, hidden_channels=args.hidden_dim, out_channels=args.out_dim)

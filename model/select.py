@@ -10,6 +10,20 @@ from blockchain.user import user_storage
 
 class Selection():
     def __init__(self, train_data, val_data, current_time, num_nodes, request_nodes, node_raw_features, device, batch_size=32768, alpha=0, gamma = 250):
+        """
+            Initialize the Selection class.
+            Input:
+                train_data: Training data
+                val_data: Validation data
+                current_time: Current time for time-based features
+                num_nodes: Total number of nodes in the graph
+                request_nodes: Number of nodes to request for personalized model selection
+                node_raw_features: Raw features of the nodes
+                device: Device to run the model on (CPU or GPU)
+                batch_size: Batch size for negative sample processing due to the GPU memory limit
+                alpha: Time decay coefficient (0 means treat all interactions equally)
+                gamma: Number of positive-negative neighborhood sample pairs to generate
+        """
         super(Selection, self).__init__()
         self.train_data = train_data
         self.val_data = val_data
@@ -26,6 +40,11 @@ class Selection():
     def rule_based_selection(self, degree, clustering):
         """
             Simple rule-based selection of backbone models based on node features.
+            Input:
+                degree: Degree of the node
+                clustering: Clustering coefficient of the node
+            Return:
+                backbone: The selected backbone model
         """
 
         if degree >= 6:
@@ -45,6 +64,12 @@ class Selection():
     def extract_features(self, node_id, neighbor_dict, degree_dict):
         """
             Extract features for a given node based on its local subgraph.
+            Input:
+                node_id: The node to extract features for
+                neighbor_dict: Dictionary of neighbors for each node
+                degree_dict: Dictionary of degrees for each node
+            Return:
+                [degree, clustering]: A list containing the degree and clustering coefficient of the node
         """
 
         neighbors = neighbor_dict.get(node_id, set())
@@ -86,7 +111,13 @@ class Selection():
     
     def create_neighbor_samples(self, node_id):
         """
-            Create positive and negative neighbor samples for a given node.
+            Create positive and negative neighbor samples for a given node. Eq. 5 implementation.
+            Input:
+                node_id: The node to sample neighbors for personalized model selection.
+            Return:
+                edge_label_index: Positive neighbor samples
+                edge_label_index_neg: Negative neighbor samples
+                node_interact_time_weights: Interaction time weights PI(u,v) for the neighbors
         """
         # Sample negative neighbors. Different random seeds can be used to generate different negative samples, which may affect the results.
         #np.random.seed(42)
@@ -115,7 +146,7 @@ class Selection():
                 neg_neighbor: Negative neighbor samples
                 node_id: The node standing for the backbone model
             Return:
-                backbone_node_prob: The test results for the selected backbone model
+                backbone_node_prob: The test results for the selected backbone model. See Eq. 6.
         """
 
         edge_label_index = pos_neighbor

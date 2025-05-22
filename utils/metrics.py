@@ -6,17 +6,30 @@ import itertools
 import random
 
 def get_rank(target_score, candidate_score):
+    """
+        Get the rank of the target score among the candidate scores.
+        Input:
+            target_score: float, the target score
+            candidate_score: list, the candidate scores
+        Return:
+            rank: int, the rank of the target score among the candidate scores
+    """
     tmp_list = target_score - candidate_score
     rank = len(tmp_list[tmp_list <= 0]) + 1
     return rank
 
 def get_link_prediction_metrics(predicts: torch.Tensor, labels: torch.Tensor, neg_size: int = 4):
     """
-    Get metrics for the link prediction task.
-    :param predicts: Tensor, shape (num_samples, )
-    :param labels: Tensor, shape (num_samples, )
-    :return:
-        dictionary of metrics {'average_precision': ..., 'roc_auc': ..., 'accuracy': ...}
+        Get metrics for the link prediction task.
+        Input:
+            predicts: Tensor, shape (num_samples, )
+            labels: Tensor, shape (num_samples, )
+            neg_size: int, the number of negative samples
+        Return:
+            metrics: dictionary of metrics {'average_precision': ..., 'roc_auc': ..., 'accuracy': ...}
+            acc_2: float, accuracy at 2
+            acc_3: float, accuracy at 3
+            acc_5: float, accuracy at 5
     """
     predicts_np = predicts.cpu().detach().numpy()
     labels_np = labels.cpu().numpy()
@@ -53,12 +66,13 @@ def get_link_prediction_metrics(predicts: torch.Tensor, labels: torch.Tensor, ne
 
 def get_retrival_metrics(pos_scores: torch.Tensor, neg_scores: torch.Tensor):
     """
-    get metrics for the link prediction task
-    :param pos_scores: Tensor, shape (num_samples, )
-    :param neg_scores: Tensor, shape (neg_size, num_samples)
-    :return:
-        H1: whether the ground truth ranked the first.
-        H1 mean: the average of H1.
+        Get metrics for the link prediction task
+        Input:
+            pos_scores: Tensor, shape (num_samples, )
+            neg_scores: Tensor, shape (neg_size, num_samples)
+        Return:
+            H1: whether the ground truth ranked the first.
+            H1 mean: the average of H1.
     """
     try:
         pos_scores = pos_scores.cpu().detach().numpy()

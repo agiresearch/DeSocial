@@ -7,7 +7,7 @@ from torch_geometric.data import Data
 
 from utils.metrics import get_link_prediction_metrics
 from utils.utils import NegativeEdgeSampler
-from utils.DataLoader import Data
+from utils.dataloader import Data
 
 def evaluate(model_name: str, model: nn.Module, evaluate_idx_data_loader: DataLoader,
              evaluate_neg_edge_sampler: NegativeEdgeSampler, evaluate_data: Data, loss_func: nn.Module,

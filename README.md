@@ -28,7 +28,7 @@ DeSocial/
 ├── utils/                         # Utility functions and helpers
 │    ├── DataLoader.py                 # Data loader.
 │    ├── EarlyStopping.py              # Early stopping of the graph training.
-│    ├── load_configs.py               # DeSocial config settings.
+│    ├── configs.py                    # DeSocial config settings.
 │    ├── metrics.py                    # Evaluation metric calculation.
 │    └── utils.py                      # Misc functions. (negative sampling, initiate validator groups, etc.)
 │

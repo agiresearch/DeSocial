@@ -12,9 +12,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 from utils.utils import set_random_seed, create_optimizer
 from utils.utils import assign_valid_groups, retreive_test_data
-from utils.DataLoader import Data
-from utils.DataLoader import get_idx_data_loader, get_link_prediction_data
-from utils.load_configs import get_link_prediction_args, load_link_prediction_best_configs, load_lr_given_models, get_num_users
+from utils.dataloader import Data
+from utils.dataloader import get_idx_data_loader, get_link_prediction_data
+from utils.configs import get_link_prediction_args, load_link_prediction_best_configs, load_lr_given_models, get_num_users
 from model.dispatcher import Dispatcher
 from model.select import Selection
 import copy
