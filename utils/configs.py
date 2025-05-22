@@ -9,14 +9,14 @@ def get_link_prediction_args():
     parser.add_argument('--dataset_name', type=str, help='dataset to be used', default='UCI',
                         choices=['UCI', 'Enron', 'GDELT', 'Memo-Tx'])
     parser.add_argument('--batch_size', type=int, default=1024, help='batch size')
-    parser.add_argument('--model_name', type=str, default='SAGE', help='name of the model',
-                        choices=['GCN', 'GAT', 'SAGE', 'MLP', 'SGC'])
+    parser.add_argument('--model_name', type=str, default='DeSocial', help='name of the model',
+                        choices=['GCN', 'GAT', 'SAGE', 'MLP', 'SGC', 'DeSocial'])
     parser.add_argument('--cuda', type=int, default=0, help='number of gpu to use')
     parser.add_argument('--num_neighbors', type=int, default=20, help='number of neighbors to sample for each node')
     parser.add_argument('--num_heads', type=int, default=2, help='number of heads used in attention layer')
     parser.add_argument('--num_layers', type=int, default=2, help='number of model layers')
     parser.add_argument('--learning_rate', type=float, default=0.001, help='learning rate')
-    parser.add_argument('--dropout', type=float, default=0.1, help='dropout rate')
+    parser.add_argument('--dropout', type=float, default=0.7, help='dropout rate')
     parser.add_argument('--num_epochs', type=int, default=100, help='number of epochs')
     parser.add_argument('--optimizer', type=str, default='Adam', choices=['SGD', 'Adam', 'RMSprop'], help='name of optimizer')
     parser.add_argument('--weight_decay', type=float, default=0.0, help='weight decay')

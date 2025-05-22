@@ -66,7 +66,7 @@ python run.py --cuda $CUDA --dataset_name $DATASET --f_pool $F --experts $EXPERT
 
 The range of some important arguments are specified below:
 ```
-$F in [MLP, GCN, GAT, SAGE, SGC]
+$F in [MLP, GCN, GAT, SAGE, SGC, PA] (PA for enabling personalized algorithm selection.)
 $DATASET in [UCI, Memo-Tx, Enron, GDELT]
 $METRIC in [Acc@2, Acc@3, Acc@5]
 ```
@@ -105,3 +105,7 @@ python run.py --cuda 0 --dataset_name UCI --f_pool SGC --experts 1 --start_perio
 Different from centralized algorithms, in each period the blockchain selects different validators. As there are tens of thousands of nodes, it's likely to train every validator given random ML parameters. Therefore, we can reproduce the result from the first testing period. As t+2=30 (the first testing period), the start period is set to 28.
 
 We reported the run time based on observing one evaluation metric because the overload of voting and aggregation is high in serial, not parallel.
+
+## 📒 Notes
+
+If you found the program is terminated due to blockchain issue, just wait for a few minutes and rerun it.
