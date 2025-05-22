@@ -9,14 +9,8 @@ old_results/
 *.ipynb
 model/modules.py
 *temp.py
-pre_trained/
-pretrained/
-run_single.py
-run_graph.sh
 *.sh
-train.py
 data/
-test.py
 run_old.py
 contract/build/contracts/DeSocial.json
 model/select_1.py
