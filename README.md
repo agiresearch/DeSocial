@@ -15,7 +15,7 @@ DeSocial/
 │    ├── contracts/contract.sol        # The Solidity smart contract.
 │    └── other files:                  # The compilation environment.
 │
-├── data/                          # Processed data. (need to create a direction)
+├── data/                          # Processed data. (need to create a directory)
 |    └──$DATASET                       # The dataset name
 │           ├── edge_list.csv          # The graph edge data.
 │           └── node_feat.npy          # The input node features.
