@@ -72,7 +72,7 @@ After downloading the repo to your computer/server, please install all the depen
 pip install -r requirements.txt
 ```
 
-For the setup of ETH Ganache environment, please follow `ganache_install.md`.
+For the setup of ETH [Ganache](https://archive.trufflesuite.com/ganache/) environment, please follow `ganache_install.md`.
 
 To create DeSocial smart contract jsons and import them into python, we use [Truffle](https://archive.trufflesuite.com/) to compile the smart contracts written in Solidity programming language. Following the instructions:
 ```bash
