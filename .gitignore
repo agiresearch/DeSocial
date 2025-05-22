@@ -6,17 +6,9 @@ old_results/
 *.pyc
 *.pyo
 *.pyd
-draw.py
-draw_acc.py
 *.ipynb
-run_moe_temp.py
 model/modules.py
-model/CAWN.py
-model/DyGFormer.py
-model/TGAT.py
-model/TCL.py
 *temp.py
-*.txt
 pre_trained/
 pretrained/
 run_single.py
