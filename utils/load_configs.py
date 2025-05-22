@@ -64,8 +64,8 @@ def get_link_prediction_args(is_evaluation: bool = False):
 
     ## Heuristics Backbone Selections
     parser.add_argument('--selection_mechanism', type=str, default='auto', choices=['random', 'rule', 'auto'], help='selection mechanism')
-    parser.add_argument('--num_neighbor_samples', type=int, default=3000, help='number of neighbor samples')
-    parser.add_argument('--alpha', type=float, default=0, help='alpha for time-based weighting decay')
+    parser.add_argument('--num_neighbor_samples', type=int, default=750, help='number of neighbor samples') # gamma
+    parser.add_argument('--alpha', type=float, default=-0.1, help='alpha for time-based weighting decay')
     parser.add_argument('--f_pool', type=str, default="SGC+SAGE+MLP+GCN+GAT", help='backbone selection pool')
 
     ## Web3 Infrastructure
@@ -139,11 +139,62 @@ def load_link_prediction_best_configs(args: argparse.Namespace):
         elif args.dataset_name == "GDELT":
             args.learning_rate = 0.001
         args.dropout = 0.7
-    else:
-        if args.model_name == "DeSocial":
-            pass
-        else:
-            raise ValueError(f"Wrong model name {args.model_name}!")
+    
+    if args.dataset_name == "UCI":
+        if args.metric == "Acc@2":
+            args.f_pool = "SGC+SAGE+MLP+GCN"
+            args.num_neighbor_samples = 750
+            args.alpha = -0.1
+        elif args.metric == "Acc@3":
+            args.f_pool = "SGC+MLP"
+            args.num_neighbor_samples = 1250
+            args.alpha = -0.1
+        elif args.metric == "Acc@5":
+            args.f_pool = "SGC+MLP"
+            args.num_neighbor_samples = 1250
+            args.alpha = -0.1
+            
+    elif args.dataset_name == "Memo-Tx":
+        if args.metric == "Acc@2":
+            args.f_pool = "SGC+SAGE"
+            args.num_neighbor_samples = 250
+            args.alpha = 0
+        elif args.metric == "Acc@3":
+            args.f_pool = "SGC+SAGE"
+            args.num_neighbor_samples = 1000
+            args.alpha = 0
+        elif args.metric == "Acc@5":
+            args.f_pool = "SGC+GCN"
+            args.num_neighbor_samples = 1250
+            args.alpha = -0.01
+    
+    elif args.dataset_name == "Enron":
+        if args.metric == "Acc@2":
+            args.f_pool = "SAGE+GAT"
+            args.num_neighbor_samples = 1250
+            args.alpha = -0.1
+        elif args.metric == "Acc@3":
+            args.f_pool = "SAGE+GAT"
+            args.num_neighbor_samples = 1250
+            args.alpha = -0.1
+        elif args.metric == "Acc@5":
+            args.f_pool = "SGC+SAGE+GAT"
+            args.num_neighbor_samples = 750
+            args.alpha = -0.1
+            
+    elif args.dataset_name == "GDELT":
+        if args.metric == "Acc@2":
+            args.f_pool = "SGC+SAGE+GAT"
+            args.num_neighbor_samples = 750
+            args.alpha = 0
+        elif args.metric == "Acc@3":
+            args.f_pool = "SGC+SAGE"
+            args.num_neighbor_samples = 750
+            args.alpha = 0
+        elif args.metric == "Acc@5":
+            args.f_pool = "SGC+GCN"
+            args.num_neighbor_samples = 1000
+            args.alpha = 0
 
 def load_lr_given_models(model_name: str, dataset_name: str):
 

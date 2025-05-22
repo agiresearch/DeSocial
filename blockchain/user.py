@@ -61,6 +61,7 @@ class BC_User:
         self.pa_requesters = []
         self.pos_neighbor = []
         self.neg_neighbor = []
+        self.neighbor_weight = []
         self.task_result = []
         self.task_results_to_comp = []
         self.validation_results = {}

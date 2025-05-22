@@ -8,11 +8,12 @@ from collections import defaultdict
 from torch_geometric.data import Data
 
 class Selection():
-    def __init__(self, train_data, val_data, current_time, request_nodes, node_raw_features, device, batch_size=32768, alpha=0, gamma = 250):
+    def __init__(self, train_data, val_data, current_time, num_nodes, request_nodes, node_raw_features, device, batch_size=32768, alpha=0, gamma = 250):
         super(Selection, self).__init__()
         self.train_data = train_data
         self.val_data = val_data
         self.current_time = current_time
+        self.num_nodes = num_nodes
         self.request_nodes = request_nodes
         self.node_raw_features = node_raw_features
         self.backbones = []
@@ -80,7 +81,7 @@ class Selection():
 
         # Preprocess degree
         self.degree_dict = {node: len(neighbors) for node, neighbors in self.neighbor_dict.items()}
-        self.selected_backbones = np.zeros((self.num_nodes,))
+        self.selected_backbones = np.zeros((self.request_nodes,))
     
     def create_neighbor_samples(self, node_id):
         """
@@ -99,12 +100,12 @@ class Selection():
         neighbors = [random.choice(neighbors_all) for _ in range(self.gamma)]
         for i in range(len(neighbors)):
             edge_label_index.append([node_id, neighbors[i][0]])
-            edge_label_index_neg.append([node_id, neg_dst[i + node_id * self.gamma]])
+            edge_label_index_neg.append([node_id, neg_dst[i]])
             node_interact_time_weights.append(np.exp(self.alpha * (self.current_time - neighbors[i][1])))
         
-        return edge_label_index, edge_label_index_neg
+        return edge_label_index, edge_label_index_neg, node_interact_time_weights
     
-    def take_exam(self, pos_neighbor, neg_neighbor, backbone_id):
+    def take_exam(self, pos_neighbor, neg_neighbor, neighbor_weights, backbone_id):
         """
             Perform the neighbor sample tasks for all the requesters, and return the test results.
             Input:
@@ -115,7 +116,8 @@ class Selection():
                 backbone_node_prob: The test results for the selected backbone model
         """
 
-        edge_label_index = pos_neighbor + neg_neighbor
+        edge_label_index = pos_neighbor
+        edge_label_index.extend(neg_neighbor)
         # Here can process by batches.
         edge_label_index = torch.tensor(np.array(edge_label_index).T, dtype=torch.long, device=self.device)
         x = torch.tensor(self.node_raw_features, dtype=torch.float, device=self.device)
@@ -123,7 +125,7 @@ class Selection():
         edge_index_inv = torch.tensor([self.dst_node_ids, self.src_node_ids], dtype=torch.long)
         edge_index = torch.cat([edge_index_dir, edge_index_inv], dim=1)
 
-        node_interact_time_weights = np.array(node_interact_time_weights)
+        node_interact_time_weights = np.array(neighbor_weights)
         data = Data(x=x, edge_index=edge_index)
         
         backbone_node_prob = np.zeros(self.request_nodes, )

@@ -52,7 +52,7 @@ pip install -r requirements.txt
 
 For the setup of ETH Ganache environment, please follow `ganache_install.md`.
 
-For the compilation of DeSocial smart contract, please use
+To create DeSocial smart contract jsons and import them into python, we use [Truffle](https://archive.trufflesuite.com/) to compile the smart contracts written in Solidity programming language. Following the instructions:
 ```bash
 cd contract
 truffle compile
@@ -60,12 +60,12 @@ truffle compile
 
 After the compilation, you will see the smart contract json in `./contract/build/contracts/DeSocial.json`
 
-To run DeSocial, please use
+To run DeSocial, please run
 ```bash
 python run.py
 ```
 
-To quickly reproduce the result of DeSocial in the best configuration, please use
+To quickly reproduce the result of DeSocial in the best configuration, please run
 ```bash
 python run.py --cuda $CUDA --dataset_name $DATASET --f_pool $F --experts $EXPERTS --metric $METRIC --start_period 28 --load_best_configs
 ```
@@ -77,22 +77,22 @@ $DATASET in [UCI, Memo-Tx, Enron, GDELT]
 $METRIC in [Acc@2, Acc@3, Acc@5]
 ```
 
-For example, if you want to quickly reproduce DeSocial-X (with validator community size of 5), X is one of the backbones, let's say SGC on UCI, please use
+For example, if you want to quickly reproduce DeSocial-X (with validator community size of 5), X is one of the backbones, let's say SGC on UCI, please run
 ```bash
 python run.py --cuda 0 --dataset_name UCI --f_pool SGC --experts 5 --start_period 28 --metric Acc@2 --load_best_configs
 ```
 
-If you want to reproduce DeSocial-PA on UCI, please use
+If you want to reproduce DeSocial-PA on UCI, please run
 ```bash
 python run.py --cuda 0 --dataset_name UCI --f_pool PA --start_period 28 --metric Acc@2 --load_best_configs
 ```
 
-If you want to reproduce DeSocial-Full on UCI, please use
+If you want to reproduce DeSocial-Full on UCI, please run
 ```bash
 python run.py --cuda 0 --dataset_name UCI --f_pool PA --experts 5 --start_period 28 --metric Acc@2 --load_best_configs
 ```
 
-If you want to reproduce DeSocial on UCI at a given backbone selection pool {GraphSAGE, SGC}, please use
+If you want to reproduce DeSocial on UCI at a given backbone selection pool {GraphSAGE, SGC}, please run
 ```bash
 python run.py --cuda 0 --dataset_name UCI --f_pool SAGE+SGC --experts 5 --start_period 28 --metric Acc@2 --load_best_configs
 ```

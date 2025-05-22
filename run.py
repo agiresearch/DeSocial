@@ -27,6 +27,8 @@ if __name__ == "__main__":
 
     warnings.filterwarnings('ignore')
     args = get_link_prediction_args(is_evaluation=False)
+    if "+" not in args.f_pool:
+        args.model_name = args.f_pool
     args.device = torch.device(f"cuda:{args.cuda}" if torch.cuda.is_available() else "cpu")
     
     if args.load_best_configs:
@@ -35,7 +37,7 @@ if __name__ == "__main__":
     
     prog_start_time = time.time()
     args.save_model_name = f'{args.model_name}_{args.name_tag}_{args.use_feature}'
-    model_name_with_params = f"{args.save_model_name}-{args.dataset_name}-lr={args.learning_rate}-experts={args.experts}-{args.strategy}"
+    model_name_with_params = f"{args.save_model_name}-{args.dataset_name}-experts={args.experts}-{args.strategy}"
     log_dir = f"./logs/{args.model_name}/{args.dataset_name}/{args.save_model_name}/{model_name_with_params}/"
     os.makedirs(log_dir, exist_ok=True)
     logging.basicConfig(level=logging.INFO)
@@ -200,7 +202,7 @@ if __name__ == "__main__":
                 validator = validator_selected[i][j]
                 logger.info(f"Expert {j} @ {backbone_models[i]}: {validator}")
                 logger.info(f'{validator} is requesting test task package at time {t+2} from {inter_terminal}...')
-                save_model_name_with_params = f"{args.save_model_name}-{backbone_models[i]}-{args.dataset_name}-lr={args.learning_rate}-experts={args.experts}-order={j}-t={t+1}-{args.strategy}"
+                save_model_name_with_params = f"{args.save_model_name}-{backbone_models[i]}-{args.dataset_name}-experts={args.experts}-order={j}-t={t+1}-{args.strategy}"
                 save_model_folder = f"./saved_models/{args.model_name}/{args.dataset_name}/{args.save_model_name}/{save_model_name_with_params}/"
                 os.makedirs(save_model_folder, exist_ok=True)
                 user_storage[validator].give_prediction(logger, args, save_model_folder, model_name_with_params)
@@ -212,14 +214,22 @@ if __name__ == "__main__":
         logger.info("Each requester is creating the historical neighborhood sampling task...")
         train_data_cur = user_storage[inter_terminal].train_data
         val_data_cur = user_storage[inter_terminal].val_data
-        selection = Selection(train_data, val_data, t+2, num_nodes, node_raw_features, 
-                              args.device, alpha=args.alpha, gamma=args.num_neighbor_samples)
+        selection = Selection(train_data, 
+                              val_data, 
+                              t+2, 
+                              num_nodes, 
+                              num_of_request_src, 
+                              node_raw_features, 
+                              args.device, 
+                              alpha=args.alpha, 
+                              gamma=args.num_neighbor_samples)
         selection.neighbor_setup()
         
         for p in unique_src:
-            pos_neighbor, neg_neighbor = selection.create_neighbor_samples(p)
+            pos_neighbor, neg_neighbor, neighbor_weight = selection.create_neighbor_samples(p)
             user_storage[p].pos_neighbor = pos_neighbor
             user_storage[p].neg_neighbor = neg_neighbor
+            user_storage[p].neighbor_weight = neighbor_weight
 
         create_end_time = time.time()
         create_time = create_end_time - create_start_time
@@ -230,14 +240,16 @@ if __name__ == "__main__":
         ###########################################################################################################
         pos_neighbors = []
         neg_neighbors = []
+        neighbor_weights = []
         pa5_start = time.time()
         for i in range(num_of_request_src):
             user_storage[unique_src[i]].send_a_request(0, inter_terminal, t+2)
             # the intermediate counts the requesters.
             user_storage[inter_terminal].pa_requesters.append(unique_src[i])
-            pos_neighbors.append(user_storage[unique_src[i]].pos_neighbor)
-            neg_neighbors.append(user_storage[unique_src[i]].neg_neighbor)
-        
+            pos_neighbors.extend(user_storage[unique_src[i]].pos_neighbor)
+            neg_neighbors.extend(user_storage[unique_src[i]].neg_neighbor)
+            neighbor_weights.extend(user_storage[unique_src[i]].neighbor_weight)
+
         pa5_end = time.time()
         pa5_time = pa5_end - pa5_start
         logger.info(f"Amortized Step 5 time: {np.round(pa5_time / num_of_request_src, 4)}.")
@@ -246,20 +258,18 @@ if __name__ == "__main__":
         # Step 6. One of the nodes in each validator community take the tasks. #
         ########################################################################
         for model_name in backbone_models:
-            model = dispatcher(model_name, args)
-            node_lr = load_lr_given_models(model_name=model_name, 
-                                            dataset_name=args.dataset_name)
-            
-            load_model_name = f'{model_name}_{args.name_tag}_'
-            load_model_name_with_params = f"{load_model_name}-{args.dataset_name}-lr={node_lr}-experts={args.experts}-order=0-t={t+1}-full"
-            load_model_folder = f"./saved_models/{model_name}/{args.dataset_name}/{load_model_name}/{load_model_name_with_params}/"
-            load_model_path = os.path.join(load_model_folder, f"{load_model_name}-{args.dataset_name}-lr={node_lr}-experts={args.experts}-full.pt")
+            model = dispatcher.dispatch(model_name, args=args)
+            load_model_name = f'{args.model_name}_{args.name_tag}_'
+            load_model_name_with_params = f"{load_model_name}-{model_name}-{args.dataset_name}-experts={args.experts}-order=0-t={t+1}-full"
+            load_model_folder = f"./saved_models/{args.model_name}/{args.dataset_name}/{load_model_name}/{load_model_name_with_params}/"
+            load_model_path = os.path.join(load_model_folder, f"{load_model_name}-{args.dataset_name}-experts={args.experts}-full.pt")
+            model.load_state_dict(torch.load(load_model_path, map_location=torch.device(args.device)))
             selection.backbones.append(model)
         
         for backbone_id in range(len(selection.backbones)):
             validator = validator_selected[backbone_id][0]
             # each backbone model will take the tasks and return the results.
-            user_storage[validator].task_result = selection.take_exam(pos_neighbors, neg_neighbors, backbone_id)
+            user_storage[validator].task_result = selection.take_exam(pos_neighbors, neg_neighbors, neighbor_weights, backbone_id)
 
         ######################################################################################
         # Step 7. The requesters are returned the test results from each candidate backbone. #
@@ -279,15 +289,15 @@ if __name__ == "__main__":
         # Step 8. The requester specify its personalized algorithm. #
         #############################################################
         logger.info("The requesters are selecting the best backbone model...")
-        backbones = []
+        backbones = {}
         for i in range(num_of_request_src):
             # get the test results for each backbone model
             # and select the best one.
             task_result_array = np.array(user_storage[unique_src[i]].task_results_to_comp)
             # select the best backbone model
             best_backbone = np.argmax(task_result_array)
-            backbones.append(best_backbone)
-        
+            backbones[unique_src[i]] = best_backbone
+
         ##########################################################################
         # Step 9. User give their votes and the blockchain aggregates the votes. #
         ##########################################################################
@@ -344,12 +354,14 @@ if __name__ == "__main__":
         for p in unique_src:
             user_storage[p].pos_neighbor = []
             user_storage[p].neg_neighbor = []
+            user_storage[p].neighbor_weight = []
             user_storage[p].task_results = []
+            user_storage[p].task_results_to_comp = []
         
     logger.info("Testing finished.")
     logger.info("Printing results...")
     exp = args.experts
     results = np.array(results)
-    logger.info(f"[Experts={exp}] Test {args.metric}: {np.round(np.mean(results), 4)} +- {np.round(np.std(results), 4)}")
+    logger.info(f"[Experts={exp}] Test {args.metric}: {np.round(np.mean(results), 4)}")
 
     sys.exit()
