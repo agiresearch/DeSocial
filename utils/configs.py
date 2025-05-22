@@ -1,7 +1,4 @@
 import argparse
-import sys
-import torch
-
 
 def get_link_prediction_args():
     """

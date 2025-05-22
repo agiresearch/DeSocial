@@ -17,7 +17,6 @@ from utils.dataloader import get_idx_data_loader, get_link_prediction_data
 from utils.configs import get_link_prediction_args, load_link_prediction_best_configs, load_lr_given_models, get_num_users
 from model.dispatcher import Dispatcher
 from model.select import Selection
-import copy
 
 from blockchain.user import BC_User
 from blockchain.blockchain import Blockchain
