@@ -13,14 +13,26 @@ def evaluate(model_name: str, model: nn.Module, evaluate_idx_data_loader: DataLo
              evaluate_neg_edge_sampler: NegativeEdgeSampler, evaluate_data: Data, loss_func: nn.Module,
              data: Data = None, device = "cpu", is_test = False, neg_size = 4):
     """
-    evaluate models on the link prediction task
-    :param model_name: str, name of the model
-    :param model: nn.Module, the model to be evaluated
-    :param evaluate_idx_data_loader: DataLoader, evaluate index data loader
-    :param evaluate_neg_edge_sampler: NegativeEdgeSampler, evaluate negative edge sampler
-    :param evaluate_data: Data, data to be evaluated
-    :param loss_func: nn.Module, loss function
-    :return:
+        Evaluate models on the link prediction task
+        Input:
+            model_name: str, name of the model
+            model: nn.Module, the model to be evaluated
+            evaluate_idx_data_loader: DataLoader, evaluate index data loader
+            evaluate_neg_edge_sampler: NegativeEdgeSampler, evaluate negative edge sampler
+            evaluate_data: Data, data to be evaluated
+            loss_func: nn.Module, loss function
+            data: Data, data to be evaluated
+            device: str, device to be used
+            is_test: bool, whether is testing
+            neg_size: int, number of negative samples
+
+        Return:
+            evaluate_losses: list, evaluate losses
+            evaluate_metrics: list, evaluate metrics
+            predicts: torch.Tensor, predicted probabilities
+            evaluate_votes: list, evaluate Acc@2
+            evaluate_ranks2: list, evaluate Acc@3
+            evaluate_ranks3: list, evaluate Acc@5
     """
     # Ensures the random sampler uses a fixed seed for evaluation (i.e. we always sample the same negatives for validation / test set)
     assert evaluate_neg_edge_sampler.seed is not None

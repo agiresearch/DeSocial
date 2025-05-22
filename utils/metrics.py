@@ -27,9 +27,9 @@ def get_link_prediction_metrics(predicts: torch.Tensor, labels: torch.Tensor, ne
             neg_size: int, the number of negative samples
         Return:
             metrics: dictionary of metrics {'average_precision': ..., 'roc_auc': ..., 'accuracy': ...}
-            acc_2: float, accuracy at 2
-            acc_3: float, accuracy at 3
-            acc_5: float, accuracy at 5
+            acc_2: float, accuracy at 2 for each edge
+            acc_3: float, accuracy at 3 for each edge
+            acc_5: float, accuracy at 5 for each edge
     """
     predicts_np = predicts.cpu().detach().numpy()
     labels_np = labels.cpu().numpy()
