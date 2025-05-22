@@ -10,7 +10,6 @@ old_results/
 model/modules.py
 *temp.py
 *.sh
-data/
 run_old.py
 contract/build/contracts/DeSocial.json
 model/select_1.py
