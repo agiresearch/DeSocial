@@ -3,11 +3,9 @@ import sys
 import torch
 
 
-def get_link_prediction_args(is_evaluation: bool = False):
+def get_link_prediction_args():
     """
-    get the args for the link prediction task
-    :param is_evaluation: boolean, whether in the evaluation process
-    :return:
+        Get the args for the link prediction task
     """
     # arguments
     parser = argparse.ArgumentParser('Interface for the link prediction task')
@@ -78,6 +76,7 @@ def get_link_prediction_args(is_evaluation: bool = False):
 
     args = parser.parse_args()
     if args.load_best_configs:
+        print("Loading best configurations...")
         load_link_prediction_best_configs(args=args)
     
     return args
@@ -140,61 +139,63 @@ def load_link_prediction_best_configs(args: argparse.Namespace):
             args.learning_rate = 0.001
         args.dropout = 0.7
     
-    if args.dataset_name == "UCI":
-        if args.metric == "Acc@2":
-            args.f_pool = "SGC+SAGE+MLP+GCN"
-            args.num_neighbor_samples = 750
-            args.alpha = -0.1
-        elif args.metric == "Acc@3":
-            args.f_pool = "SGC+MLP"
-            args.num_neighbor_samples = 1250
-            args.alpha = -0.1
-        elif args.metric == "Acc@5":
-            args.f_pool = "SGC+MLP"
-            args.num_neighbor_samples = 1250
-            args.alpha = -0.1
-            
-    elif args.dataset_name == "Memo-Tx":
-        if args.metric == "Acc@2":
-            args.f_pool = "SGC+SAGE"
-            args.num_neighbor_samples = 250
-            args.alpha = 0
-        elif args.metric == "Acc@3":
-            args.f_pool = "SGC+SAGE"
-            args.num_neighbor_samples = 1000
-            args.alpha = 0
-        elif args.metric == "Acc@5":
-            args.f_pool = "SGC+GCN"
-            args.num_neighbor_samples = 1250
-            args.alpha = -0.01
-    
-    elif args.dataset_name == "Enron":
-        if args.metric == "Acc@2":
-            args.f_pool = "SAGE+GAT"
-            args.num_neighbor_samples = 1250
-            args.alpha = -0.1
-        elif args.metric == "Acc@3":
-            args.f_pool = "SAGE+GAT"
-            args.num_neighbor_samples = 1250
-            args.alpha = -0.1
-        elif args.metric == "Acc@5":
-            args.f_pool = "SGC+SAGE+GAT"
-            args.num_neighbor_samples = 750
-            args.alpha = -0.1
-            
-    elif args.dataset_name == "GDELT":
-        if args.metric == "Acc@2":
-            args.f_pool = "SGC+SAGE+GAT"
-            args.num_neighbor_samples = 750
-            args.alpha = 0
-        elif args.metric == "Acc@3":
-            args.f_pool = "SGC+SAGE"
-            args.num_neighbor_samples = 750
-            args.alpha = 0
-        elif args.metric == "Acc@5":
-            args.f_pool = "SGC+GCN"
-            args.num_neighbor_samples = 1000
-            args.alpha = 0
+    if args.f_pool == "PA":
+
+        if args.dataset_name == "UCI":
+            if args.metric == "Acc@2":
+                args.f_pool = "SGC+SAGE+MLP+GCN"
+                args.num_neighbor_samples = 750
+                args.alpha = -0.1
+            elif args.metric == "Acc@3":
+                args.f_pool = "SGC+MLP"
+                args.num_neighbor_samples = 1250
+                args.alpha = -0.1
+            elif args.metric == "Acc@5":
+                args.f_pool = "SGC+MLP"
+                args.num_neighbor_samples = 1250
+                args.alpha = -0.1
+                
+        elif args.dataset_name == "Memo-Tx":
+            if args.metric == "Acc@2":
+                args.f_pool = "SGC+SAGE"
+                args.num_neighbor_samples = 250
+                args.alpha = 0
+            elif args.metric == "Acc@3":
+                args.f_pool = "SGC+SAGE"
+                args.num_neighbor_samples = 1000
+                args.alpha = 0
+            elif args.metric == "Acc@5":
+                args.f_pool = "SGC+GCN"
+                args.num_neighbor_samples = 1250
+                args.alpha = -0.01
+        
+        elif args.dataset_name == "Enron":
+            if args.metric == "Acc@2":
+                args.f_pool = "SAGE+GAT"
+                args.num_neighbor_samples = 1250
+                args.alpha = -0.1
+            elif args.metric == "Acc@3":
+                args.f_pool = "SAGE+GAT"
+                args.num_neighbor_samples = 1250
+                args.alpha = -0.1
+            elif args.metric == "Acc@5":
+                args.f_pool = "SGC+SAGE+GAT"
+                args.num_neighbor_samples = 750
+                args.alpha = -0.1
+                
+        elif args.dataset_name == "GDELT":
+            if args.metric == "Acc@2":
+                args.f_pool = "SGC+SAGE+GAT"
+                args.num_neighbor_samples = 750
+                args.alpha = 0
+            elif args.metric == "Acc@3":
+                args.f_pool = "SGC+SAGE"
+                args.num_neighbor_samples = 750
+                args.alpha = 0
+            elif args.metric == "Acc@5":
+                args.f_pool = "SGC+GCN"
+                args.num_neighbor_samples = 1000
+                args.alpha = 0
 
 def load_lr_given_models(model_name: str, dataset_name: str):
 
