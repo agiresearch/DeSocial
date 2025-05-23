@@ -118,7 +118,7 @@ python run.py --cuda 0 --dataset_name UCI --f_pool SGC --experts 5 --start_perio
 
 If you want to reproduce DeSocial-PA on UCI, please run
 ```bash
-python run.py --cuda 0 --dataset_name UCI --f_pool PA --start_period 28 --metric Acc@2 --load_best_configs
+python run.py --cuda 0 --dataset_name UCI --f_pool PA --experts 1 --start_period 28 --metric Acc@2 --load_best_configs
 ```
 
 If you want to reproduce DeSocial-Full on UCI, please run
