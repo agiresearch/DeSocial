@@ -1,6 +1,6 @@
 # DeSocial: Blockchain-based Decentralized Social Networks
 
-This repository contains the source code for the DeSocial project. DeSocial is a decentralized social network framework that utilize blockchain infrastructure and graph learning models to enable transparent, user-driven, and personalized social network predictions.
+This repository contains the source code for the DeSocial project. DeSocial is a decentralized social network framework that utilize blockchain infrastructure and graph learning models to enable transparent, user-driven, and personalized social network predictions. The project website link is [here](https://luckfort.github.io/DeSocial-project/).
 
 ## 🌐 Project Structure
 
