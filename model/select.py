@@ -6,7 +6,7 @@ import networkx as nx
 from tqdm import tqdm
 from collections import defaultdict
 from torch_geometric.data import Data
-from blockchain.user import user_storage
+from system.user import user_storage
 
 class Selection():
     def __init__(self, train_data, val_data, current_time, num_nodes, request_nodes, node_raw_features, device, batch_size=32768, alpha=0, gamma = 250):

@@ -18,9 +18,9 @@ from utils.configs import get_link_prediction_args, load_link_prediction_best_co
 from model.dispatcher import Dispatcher
 from model.select import Selection
 
-from blockchain.user import BC_User
-from blockchain.blockchain import Blockchain
-from blockchain.user import user_storage
+from system.user import User
+from system.coordinator import Coordinator
+from system.user import user_storage
 
 if __name__ == "__main__":
     
@@ -50,19 +50,18 @@ if __name__ == "__main__":
 
     results = []
     
-    ##########################################
-    # The blockchain and user storage setup. # 
-    ##########################################
-    # Initialize the blockchain.
+    #########################################
+    # The coordinator and user storage setup #
+    #########################################
+    # Initialize the coordinator
     num_users = get_num_users(args.dataset_name)
     num_nodes = num_users
     model_type, model_nodes = assign_valid_groups(num_nodes)
-    blockchain = Blockchain(provider_url=args.provider_url, contract_json_path=args.contract_json_path, num_node=num_nodes)
-    accounts = blockchain.web3.eth.accounts
+    coordinator = Coordinator(num_node=num_nodes)
     dispatcher = Dispatcher()
 
-    # Allocate memory for each user.
-    logger.info("Initializing users in blockchain...")
+    # Allocate memory for each user
+    logger.info("Initializing users in the system...")
     for i in tqdm(range(num_nodes)):
         node_model_type = model_type[i]
         model = dispatcher.dispatch(node_model_type, args=args)
@@ -74,29 +73,26 @@ if __name__ == "__main__":
                                      optimizer_name=args.optimizer, 
                                      learning_rate=node_lr, 
                                      weight_decay=args.weight_decay)
-        user = BC_User(user_id=i,
-                       bc_address=accounts[i],
-                       num_of_val=args.experts,
-                       url=args.provider_url,
-                       web3=blockchain.web3,
-                       num_nodes=num_nodes)
-        user.contract = blockchain.contract
+        user = User(user_id=i,
+                    num_of_val=args.experts,
+                    num_nodes=num_nodes,
+                    coordinator=coordinator)
         user.model = model
         user.optimizer = optimizer
         user_storage.append(user)
     
     loss_func = nn.BCELoss()
 
-    # extract backbone models from f_pool
+    # Extract backbone models from f_pool
     backbone_models = args.f_pool.split('+')
-    # Here construct each model list, stored locally.
-    # When the smart contract selects validators, it will just return the index list, and we can directly use the list.
+    # Here construct each model list, stored locally
+    # When selecting validators, it will just return the index list
     validator_communities = []
     for i in range(len(backbone_models)):
         validator_communities.append(model_nodes[backbone_models[i]])
 
-    # Initialize the graph data for first several periods.
-    # Then add the edges one by one in the future periods.
+    # Initialize the graph data for first several periods
+    # Then add the edges one by one in the future periods
     logger.info("Loading data for each user...")
     node_raw_features, full_data, train_data, val_data, test_data = \
         get_link_prediction_data(dataset_name = args.dataset_name, 
@@ -121,8 +117,8 @@ if __name__ == "__main__":
         num_requests = test_data.src_node_ids.shape[0]
         logger.info(f'Number of requests this period: {num_requests}')
 
-        # deal with the future requests one by one on chain.
-        # the requests will finally stored in the local location of the first requester. (to run the blockchain faster)
+        # Deal with the future requests one by one
+        # The requests will finally be stored in the local location of the first requester
         inter_terminal = test_data.src_node_ids[0]
         sel_val_time = []
         unique_src = np.unique(test_data.src_node_ids)
@@ -131,14 +127,14 @@ if __name__ == "__main__":
         request_start_time = time.time()
         for i in tqdm(range(num_requests)):
             #####################################################################################
-            # Step 1. Specify the requester p and target q for each link prediction task (p,q). # 
+            # Step 1. Specify the requester p and target q for each link prediction task (p,q) #
             #####################################################################################
             requester = int(test_data.src_node_ids[i])
             target = int(test_data.dst_node_ids[i])
             
-            #################################################################################################################
-            # Step 2(1). The requester p sends the request to the blockchain, and the intermediate node store the requests. # 
-            #################################################################################################################
+            #######################################################################################
+            # Step 2(1). The requester p sends the request, and the intermediate node stores them #
+            #######################################################################################
             user_storage[requester].send_a_request(target, inter_terminal, t+2)
             user_storage[inter_terminal].requests_collected.append([requester, target, t+2])
         
@@ -147,7 +143,7 @@ if __name__ == "__main__":
         logger.info(f"Amortized Step 2 (Request) time: {np.round(request_time / num_of_request_src, 4)}.")
         
         ########################################################################
-        # Step 2(2). The intermediate terminal is collecting all the requests. #
+        # Step 2(2). The intermediate terminal is collecting all the requests #
         ########################################################################
         logger.info("The intermediate terminal is collecting all the requests...")
         requests = np.array(user_storage[inter_terminal].requests_collected)
@@ -157,16 +153,15 @@ if __name__ == "__main__":
         test_data = Data(src_node_ids=test_src_id, dst_node_ids=test_dst_id, node_interact_times=test_node_interact_times)
         user_storage[inter_terminal].test_data = test_data
         
-        #####################################################################################################
-        # Step 2(3). The blockchain selects validators from each community (the group with same backbones). #
-        #####################################################################################################
+        ########################################################################################
+        # Step 2(3). Select validators from each community (the group with same backbones) #
+        ########################################################################################
         logger.info("Selecting validators from each backbone model group...")
         validator_selected = []
         sel_val_start_time = time.time()
         for i in range(len(validator_communities)):
             logger.info(f"Selecting validators from nodes possess {backbone_models[i]}...")
-            # in this stage, the intermidiate terminal send a request
-            # to let the blockchain select validators for each backbone model, by returning random indices.
+            # The intermediate terminal sends a request to select validators for each backbone model
             val_indices = user_storage[inter_terminal].select_validators(len(validator_communities[i]), args.experts)
             validator_selected.append([validator_communities[i][v] for v in val_indices])
         
@@ -175,13 +170,12 @@ if __name__ == "__main__":
         logger.info(f"Amortized Step 2 (Validator selection) time: {np.round(sel_val_time / (args.experts * len(validator_communities)), 4)}")
         print(validator_selected)
         
-        # then the validators retrieve the test data from the intermidiate terminal by smart contract.
-        # the validator will sign the receipt saying they have received the test data.
+        # Then the validators retrieve the test data from the intermediate terminal
         retrieve_start_time = time.time()
         
-        #################################################################################################################
-        # Step 2(4). Each valdidator retrieving test requests from the intermediate node by calling the smart contract. #
-        #################################################################################################################
+        ##################################################################################
+        # Step 2(4). Each validator retrieves test requests from the intermediate node #
+        ##################################################################################
         logger.info("Each validator is retrieving the test data...")
         for i in range(len(validator_communities)):
             for j in range(args.experts):
@@ -193,7 +187,7 @@ if __name__ == "__main__":
         logger.info(f"Amortized Step 2 (retrieving) time: {np.round(retrieve_time / (args.experts * len(validator_communities)), 4)}.")
 
         ##################################################
-        # Step 3. Each validator trains their own model. #
+        # Step 3. Each validator trains their own model #
         ##################################################
         logger.info("Each validator is training...")
         for i in range(len(validator_communities)):
@@ -209,7 +203,7 @@ if __name__ == "__main__":
         if pa_enabled:
 
             #############################################################################
-            # Step 4. Each requester p creates a historical neighborhood sampling task. #
+            # Step 4. Each requester p creates a historical neighborhood sampling task #
             #############################################################################
             create_start_time = time.time()
             logger.info("Each requester is creating the historical neighborhood sampling task...")
@@ -237,7 +231,7 @@ if __name__ == "__main__":
             logger.info(f"Amortized Step 4 (Create) time: {np.round(create_time / num_of_request_src, 4)}.")
             
             ###########################################################################################################
-            # Step 5. Each requester p sends the request to evaluate the neighbor sampling task on various backbones. #
+            # Step 5. Each requester p sends the request to evaluate the neighbor sampling task on various backbones #
             ###########################################################################################################
             pos_neighbors = []
             neg_neighbors = []
@@ -245,7 +239,7 @@ if __name__ == "__main__":
             pa5_start = time.time()
             for i in range(num_of_request_src):
                 user_storage[unique_src[i]].send_a_request(0, inter_terminal, t+2)
-                # the intermediate counts the requesters.
+                # The intermediate counts the requesters
                 user_storage[inter_terminal].pa_requesters.append(unique_src[i])
                 pos_neighbors.extend(user_storage[unique_src[i]].pos_neighbor)
                 neg_neighbors.extend(user_storage[unique_src[i]].neg_neighbor)
@@ -256,7 +250,7 @@ if __name__ == "__main__":
             logger.info(f"Amortized Step 5 time: {np.round(pa5_time / num_of_request_src, 4)}.")
 
             ########################################################################
-            # Step 6. One of the nodes in each validator community take the tasks. #
+            # Step 6. One of the nodes in each validator community take the tasks #
             ########################################################################
             for i in range(len(validator_communities)):
                 validator = validator_selected[i][0]
@@ -264,11 +258,11 @@ if __name__ == "__main__":
             
             for backbone_id in range(len(selection.backbones)):
                 validator = validator_selected[backbone_id][0]
-                # each backbone model will take the tasks and return the results.
+                # Each backbone model will take the tasks and return the results
                 user_storage[validator].task_result = selection.take_exam(pos_neighbors, neg_neighbors, neighbor_weights, validator)
 
             ######################################################################################
-            # Step 7. The requesters are returned the test results from each candidate backbone. #
+            # Step 7. The requesters are returned the test results from each candidate backbone #
             ######################################################################################
             pa7_start = time.time()
             for i in range(num_of_request_src):
@@ -282,29 +276,28 @@ if __name__ == "__main__":
             logger.info(f"Amortized Step 7 time: {np.round(pa7_time / num_of_request_src, 4)}.")
             
             #############################################################
-            # Step 8. The requester specify its personalized algorithm. #
+            # Step 8. The requester specify its personalized algorithm #
             #############################################################
             logger.info("The requesters are selecting the best backbone model...")
             backbones = {}
             for i in range(num_of_request_src):
-                # get the test results for each backbone model
-                # and select the best one.
+                # Get the test results for each backbone model and select the best one
                 task_result_array = np.array(user_storage[unique_src[i]].task_results_to_comp)
-                # select the best backbone model
+                # Select the best backbone model
                 best_backbone = np.argmax(task_result_array)
                 backbones[unique_src[i]] = best_backbone
 
-        ##########################################################################
-        # Step 9. User give their votes and the blockchain aggregates the votes. #
-        ##########################################################################
+        ########################################################################
+        # Step 9. Validators give their votes and the system aggregates them #
+        ########################################################################
         logger.info("Final aggregation...")
         vote_start_time = time.time()
         decisions = []
         for i in tqdm(range(num_requests)):
             p = int(test_data.src_node_ids[i])
             q = int(test_data.dst_node_ids[i])
-            # Setting the personalized algorithm for each request user p.
-            # This is very important because the correct validator community need to give votes.
+            # Setting the personalized algorithm for each request user p
+            # This is important because the correct validator community needs to give votes
             if not pa_enabled:
                 personalized_algorithm = 0
             else:
@@ -314,7 +307,7 @@ if __name__ == "__main__":
             for j in range(args.experts):
                 validator = validator_p[j]
                 user_storage[validator].give_votes(logger, i, args.metric)
-            # aggregate the votes
+            # Aggregate the votes
             decision = user_storage[inter_terminal].aggr_decisions(logger)
             decisions.append(decision)
             
@@ -328,9 +321,9 @@ if __name__ == "__main__":
         logger.info(f"[Experts={exp}] Final vote {args.metric}: {np.round(decisions_report, 4)}")
         results.append(decisions_report)
 
-        ###################################################################################
+        ##################################################################################
         # Step 10. All the nodes merge the previous train_data and val_data to train_data #
-        ###################################################################################
+        ##################################################################################
         logger.info("Users are updating their social network data...")
         if t != args.end_period - 1:
             broadcast_start_time = time.time()
@@ -348,7 +341,7 @@ if __name__ == "__main__":
                 user_storage[i].train_data = user_storage[0].train_data
                 user_storage[i].val_data = user_storage[0].val_data
         
-        # Empty the storage of current period requests.
+        # Empty the storage of current period requests
         user_storage[inter_terminal].requests_collected = []
         user_storage[inter_terminal].pa_requesters = []
         for p in unique_src:

@@ -6,4 +6,3 @@ scikit_learn==1.4.2
 torch==2.5.1
 torch_geometric==2.6.1
 tqdm==4.67.1
-web3==7.4.0

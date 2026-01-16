@@ -35,7 +35,7 @@ def get_link_prediction_args():
     parser.add_argument('--name_tag', type=str, default='DeSocial-Run', help='name tag (distinguish different experiments)')
     parser.add_argument('--load_best_configs', action='store_true', default=False, help='whether to load the best configurations')
 
-    ## Multi-Node Decentralized Consensus Voting
+    ## Multi-Validator Distributed Consensus
     parser.add_argument('--experts', type=int, default=5, help='number of experts')
 
     ## Heuristics Backbone Selections
@@ -44,10 +44,6 @@ def get_link_prediction_args():
     parser.add_argument('--alpha', type=float, default=-0.1, help='alpha for time-based weighting decay')
     parser.add_argument('--f_pool', type=str, default="SGC+SAGE+MLP+GCN+GAT", help='backbone selection pool')
 
-    ## Web3 Infrastructure
-    parser.add_argument('--provider_url', type=str, default='http://127.0.0.1:7545', help='provider url')
-    parser.add_argument('--contract_json_path', type=str, default='./contract/build/contracts/DeSocial.json', help='contract json')
-    
     ## Evaluation Metrics
     ## We reported the run time based on observing one evaluation metric because the overload of voting and aggregation is high in serial, not parallel.
     parser.add_argument('--metric', type=str, default="Acc@2", help='Evaluation metric to observe' )
