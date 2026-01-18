@@ -7,12 +7,7 @@ This repository contains the source code for the DeSocial project. DeSocial is a
 If you find this work useful, please cite our paper:
 
 ```bibtex
-@inproceedings{desocial2025,
-  title={From Aggregation to Selection: User-Validated Distributed Social Recommendation},
-  author={Huang, Jingyuan and Luo, Dan and Ye, Zihe and Chen, Weixin and Guo, Minghao and Zhang, Yongfeng},
-  booktitle={Companion Proceedings of the ACM Web Conference},
-  year={2025}
-}
+to be appear
 ```
 
 ## 🌐 Project Structure
